@@ -9,7 +9,7 @@ from objbase.storage.mongodb_storage import MongoDBStorage
 
 # mongo:latest (8.x) refuses to start on Linux kernels >= 6.19 (SERVER-121912),
 # which recent Docker Desktop VMs ship. Pin a known-good image by default.
-MONGO_IMAGE = os.getenv("INVENTORYDB_TEST_MONGO_IMAGE", "mongo:7.0")
+MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
 
 # ---------------------------------------------------------------------------
 # Fixtures

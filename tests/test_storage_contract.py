@@ -5,7 +5,7 @@ Each adapter must behave identically for the operations below (see the
 per-adapter test modules.
 
 Redis and MongoDB run in testcontainers and are skipped when Docker is not
-available. The MongoDB image can be overridden with INVENTORYDB_TEST_MONGO_IMAGE.
+available. The MongoDB image can be overridden with OBJBASE_TEST_MONGO_IMAGE.
 """
 
 import os
@@ -25,7 +25,7 @@ from objbase.storage.inmemory_storage import InMemoryStorage
 from objbase.storage.sqlite_storage import SQLiteStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
-MONGO_IMAGE = os.getenv("INVENTORYDB_TEST_MONGO_IMAGE", "mongo:7.0")
+MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
 
 
 def _docker_available() -> bool:

@@ -10,7 +10,7 @@ from testcontainers.community.mongodb import MongoDbContainer
 from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
-MONGO_IMAGE = os.getenv("INVENTORYDB_TEST_MONGO_IMAGE", "mongo:7.0")
+MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
 
 # ---------------------------------------------------------------------------
 # Fixtures
