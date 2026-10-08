@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from objbase.interface import AsyncStorage, Item
+from objbase.storage.mongodb import DEFAULT_DB_NAME
 
 if TYPE_CHECKING:
     from pymongo import AsyncMongoClient
@@ -14,11 +15,12 @@ class AsyncMongoDBStorage(AsyncStorage):
     Takes an async client such as ``pymongo.AsyncMongoClient``.
     """
 
-    def __init__(self, mongo_client: "AsyncMongoClient[Item]"):
+    def __init__(self, mongo_client: "AsyncMongoClient[Item]", db_name: str = DEFAULT_DB_NAME):
         self.mongo_client = mongo_client
+        self.db_name = db_name
 
     def get_mongo_collection(self, item_type: str) -> "AsyncCollection[Item]":
-        db = self.mongo_client["collection"]
+        db = self.mongo_client[self.db_name]
         return db[item_type]
 
     async def akeys(self, item_type: str) -> list[str]:

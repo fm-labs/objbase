@@ -7,15 +7,21 @@ if TYPE_CHECKING:
     from pymongo import MongoClient
     from pymongo.collection import Collection
 
+DEFAULT_DB_NAME = "objbase"
+
 
 class MongoDBStorage(Storage):
-    """MongoDB-based storage implementation for collection items."""
+    """MongoDB-based storage implementation for collection items.
 
-    def __init__(self, mongo_client: "MongoClient[Item]"):
+    Items are stored in the ``db_name`` database, one MongoDB collection per item type.
+    """
+
+    def __init__(self, mongo_client: "MongoClient[Item]", db_name: str = DEFAULT_DB_NAME):
         self.mongo_client = mongo_client
+        self.db_name = db_name
 
     def get_mongo_collection(self, item_type: str) -> "Collection[Item]":
-        db = self.mongo_client["collection"]
+        db = self.mongo_client[self.db_name]
         return db[item_type]
 
     def keys(self, item_type: str) -> list[str]:

@@ -5,7 +5,7 @@ import os
 import pytest
 from testcontainers.community.mongodb import MongoDbContainer
 
-from objbase.storage.mongodb import MongoDBStorage
+from objbase.storage.mongodb import DEFAULT_DB_NAME, MongoDBStorage
 
 # mongo:latest (8.x) refuses to start on Linux kernels >= 6.19 (SERVER-121912),
 # which recent Docker Desktop VMs ship. Pin a known-good image by default.
@@ -27,7 +27,7 @@ def mongo_container():
 def mongo_client(mongo_container):
     """Return a MongoClient and drop the collection DB before each test."""
     client = mongo_container.get_connection_client()
-    client.drop_database("collection")
+    client.drop_database(DEFAULT_DB_NAME)
     return client
 
 
@@ -202,3 +202,30 @@ class TestMongoDBStorageDelete:
         storage.write("todo", {"id": "2"})
         storage.delete("todo", "1")
         assert storage.read("todo", "2") == {"id": "2"}
+
+
+# ---------------------------------------------------------------------------
+# database name
+# ---------------------------------------------------------------------------
+
+
+class TestMongoDBStorageDbName:
+    def test_default_db_name(self, storage, mongo_client):
+        storage.write("todo", {"id": "1"})
+        assert mongo_client["objbase"]["todo"].count_documents({"id": "1"}) == 1
+
+    def test_custom_db_name(self, mongo_client):
+        mongo_client.drop_database("myapp")
+        storage = MongoDBStorage(mongo_client, db_name="myapp")
+        storage.write("todo", {"id": "1"})
+        assert mongo_client["myapp"]["todo"].count_documents({"id": "1"}) == 1
+        assert "todo" not in mongo_client["objbase"].list_collection_names()
+
+    def test_different_db_names_are_isolated(self, mongo_client):
+        mongo_client.drop_database("a")
+        mongo_client.drop_database("b")
+        a = MongoDBStorage(mongo_client, db_name="a")
+        b = MongoDBStorage(mongo_client, db_name="b")
+        a.write("todo", {"id": "1"})
+        assert b.read("todo", "1") is None
+        assert b.items("todo") == []

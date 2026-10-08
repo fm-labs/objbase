@@ -245,9 +245,10 @@ storage = MongoDBStorage(mongo_client=client)
 ```
 
 Items are stored in the `collection` database, one collection per `item_type`.
+Pass `db_name="myapp"` to use a different database.
 The MongoDB `_id` field is stripped from results automatically.
 Pass a pre-configured `pymongo.MongoClient`. Requires `pymongo`. `AsyncMongoDBStorage`
-takes a `pymongo.AsyncMongoClient` and uses the same layout, so sync and async adapters
+takes a `pymongo.AsyncMongoClient` (and the same `db_name` option) and uses the same layout, so sync and async adapters
 can share data. Both accept an optional MongoDB `query` in `items` / `aitems` to filter results.
 
 ---

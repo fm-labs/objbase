@@ -8,6 +8,7 @@ import pytest
 from testcontainers.community.mongodb import MongoDbContainer
 
 from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
+from objbase.storage.mongodb import DEFAULT_DB_NAME
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
 MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
@@ -28,7 +29,7 @@ def mongo_container():
 async def mongo_client(mongo_container):
     """Return an AsyncMongoClient and drop the collection DB before each test."""
     client: pymongo.AsyncMongoClient[dict[str, Any]] = pymongo.AsyncMongoClient(mongo_container.get_connection_url())
-    await client.drop_database("collection")
+    await client.drop_database(DEFAULT_DB_NAME)
     yield client
     await client.close()
 
@@ -190,3 +191,11 @@ class TestAsyncMongoDBStorageLayout:
 
         MongoDBStorage(mongo_container.get_connection_client()).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}
+
+    async def test_custom_db_name_shares_data_with_sync_storage(self, mongo_container, mongo_client):
+        from objbase.storage.mongodb import MongoDBStorage
+
+        await mongo_client.drop_database("myapp")
+        MongoDBStorage(mongo_container.get_connection_client(), db_name="myapp").write("todo", {"id": "1"})
+        assert await AsyncMongoDBStorage(mongo_client, db_name="myapp").aread("todo", "1") == {"id": "1"}
+        assert await AsyncMongoDBStorage(mongo_client).aread("todo", "1") is None

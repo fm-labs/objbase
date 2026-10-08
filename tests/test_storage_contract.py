@@ -88,10 +88,10 @@ def _redis(request, tmp_path):
 
 
 def _mongodb(request, tmp_path):
-    from objbase.storage.mongodb import MongoDBStorage
+    from objbase.storage.mongodb import DEFAULT_DB_NAME, MongoDBStorage
 
     client = request.getfixturevalue("mongo_container").get_connection_client()
-    client.drop_database("collection")
+    client.drop_database(DEFAULT_DB_NAME)
     return MongoDBStorage(client)
 
 

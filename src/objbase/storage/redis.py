@@ -3,7 +3,7 @@ from typing import Any, Protocol
 
 from objbase.interface import Item, Storage
 
-DEFAULT_KEY_PREFIX = "collection:"
+DEFAULT_KEY_PREFIX = "objbase:"
 
 
 class RedisHashClient(Protocol):

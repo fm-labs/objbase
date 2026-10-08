@@ -43,7 +43,7 @@ class TestRedisStorageWrite:
 
     def test_write_stores_item_as_json_in_type_hash(self, storage, redis_client):
         storage.write("todo", {"id": "1", "title": "Buy milk"})
-        raw = redis_client.hget("collection:todo", "1")
+        raw = redis_client.hget("objbase:todo", "1")
         assert json.loads(raw) == {"id": "1", "title": "Buy milk"}
 
     def test_write_preserves_value_types(self, storage):
@@ -149,7 +149,7 @@ class TestRedisStorageDelete:
     def test_delete_removes_item_from_redis(self, storage, redis_client):
         storage.write("todo", {"id": "1"})
         storage.delete("todo", "1")
-        assert not redis_client.hexists("collection:todo", "1")
+        assert not redis_client.hexists("objbase:todo", "1")
 
     def test_delete_item_no_longer_readable(self, storage):
         storage.write("todo", {"id": "1"})
@@ -203,7 +203,7 @@ class TestRedisStorageLayout:
         storage = RedisStorage(redis_client, key_prefix="myapp:")
         storage.write("todo", {"id": "1"})
         assert redis_client.hexists("myapp:todo", "1")
-        assert not redis_client.exists("collection:todo")
+        assert not redis_client.exists("objbase:todo")
 
     def test_different_prefixes_are_isolated(self, redis_client):
         a = RedisStorage(redis_client, key_prefix="a:")
