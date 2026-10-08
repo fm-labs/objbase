@@ -139,7 +139,7 @@ class TestAsyncSQLiteStorageBehaviour:
         await asyncio.gather(*(storage.awrite("todo", {"id": str(i)}) for i in range(20)))
         assert sorted(await storage.akeys("todo"), key=int) == [str(i) for i in range(20)]
 
-    async def test_works_with_async_inventory(self, storage):
+    async def test_works_with_async_collection(self, storage):
         todos = AsyncCollection(item_type="todo", storage=storage)
         await todos.save({"id": "1", "done": False})
         assert await todos.patch("1", {"done": True}) == {"id": "1", "done": True}

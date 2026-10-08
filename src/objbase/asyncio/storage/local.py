@@ -16,8 +16,8 @@ class AsyncLocalFileStorage(ThreadedAsyncStorage[LocalFileStorage]):
         super().__init__(LocalFileStorage(base_dir))
 
     @property
-    def inventory_dir(self) -> str:
-        return self.sync_storage.inventory_dir
+    def collection_dir(self) -> str:
+        return self.sync_storage.collection_dir
 
 
 class AsyncLocalDirectoryStorage(ThreadedAsyncStorage[LocalDirectoryStorage]):
@@ -32,8 +32,8 @@ class AsyncLocalDirectoryStorage(ThreadedAsyncStorage[LocalDirectoryStorage]):
         super().__init__(LocalDirectoryStorage(base_dir))
 
     @property
-    def inventory_dir(self) -> str:
-        return self.sync_storage.inventory_dir
+    def collection_dir(self) -> str:
+        return self.sync_storage.collection_dir
 
     async def arebuild_index(self, item_type: str) -> None:
         """Async counterpart of ``LocalDirectoryStorage.rebuild_index``."""

@@ -76,7 +76,7 @@ def _directory(request, tmp_path):
 
 
 def _sqlite(request, tmp_path):
-    return SQLiteStorage(str(tmp_path / "inventory.db"))
+    return SQLiteStorage(str(tmp_path / "collection.db"))
 
 
 def _redis(request, tmp_path):
@@ -91,7 +91,7 @@ def _mongodb(request, tmp_path):
     from objbase.storage.mongodb import MongoDBStorage
 
     client = request.getfixturevalue("mongo_container").get_connection_client()
-    client.drop_database("inventory")
+    client.drop_database("collection")
     return MongoDBStorage(client)
 
 
@@ -293,7 +293,7 @@ async def _async_mongodb(request):
 
     url = request.getfixturevalue("mongo_container").get_connection_url()
     client: pymongo.AsyncMongoClient[Item] = pymongo.AsyncMongoClient(url)
-    await client.drop_database("inventory")
+    await client.drop_database("collection")
     return AsyncMongoDBStorage(client)
 
 

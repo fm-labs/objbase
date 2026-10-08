@@ -4,7 +4,7 @@ from objbase.interface import AsyncStorage, Item, Storage
 
 
 class InMemoryStorage(Storage, AsyncStorage):
-    """In-memory storage implementation for inventory items.
+    """In-memory storage implementation for collection items.
 
     Items are deep-copied on the way in and out, so callers never share
     mutable state with the store.

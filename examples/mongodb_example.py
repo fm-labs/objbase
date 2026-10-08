@@ -10,22 +10,22 @@ from objbase.storage.mongodb import MongoDBStorage
 
 client: pymongo.MongoClient[Item] = pymongo.MongoClient(os.getenv("MONGODB_URI", "mongodb://localhost:27017"))
 storage = MongoDBStorage(mongo_client=client)
-todos_inventory = Collection(item_type="todo", storage=storage)
+todos_collection = Collection(item_type="todo", storage=storage)
 
 # Create some to-do items
-todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})
-todos_inventory.save({"id": "2", "name": "Walk the dog", "status": "pending"})
-print("All To-dos:", todos_inventory.items())
+todos_collection.save({"id": "1", "name": "Buy groceries", "status": "pending"})
+todos_collection.save({"id": "2", "name": "Walk the dog", "status": "pending"})
+print("All To-dos:", todos_collection.items())
 
 # Update a to-do item
-updated_todo = todos_inventory.patch("1", {"status": "completed"})
+updated_todo = todos_collection.patch("1", {"status": "completed"})
 print("Updated To-do:", updated_todo)
 
 # Filter with a MongoDB query (a MongoDB-only extension of the storage adapter)
 print("Pending To-dos:", storage.items("todo", query={"status": "pending"}))
 
 # Delete the to-do items
-for todo_id in todos_inventory.keys():
-    print(f"Deleted To-do {todo_id}:", todos_inventory.delete(todo_id))
+for todo_id in todos_collection.keys():
+    print(f"Deleted To-do {todo_id}:", todos_collection.delete(todo_id))
 
 client.close()

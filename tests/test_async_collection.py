@@ -175,12 +175,12 @@ class TestAsyncPydanticCollection:
         storage.write("todo", {"id": "1", "title": "a", "done": "not a bool"})  # written outside the model
         assert await model_todos.keys() == ["1"]
         with pytest.raises(pydantic.ValidationError):
-            await model_todos.filter()
+            await model_todos.items()
 
     async def test_items_returns_models(self, model_todos):
         await model_todos.save(Todo(id="1", title="a"))
         await model_todos.save(Todo(id="2", title="b"))
-        result = await model_todos.filter()
+        result = await model_todos.items()
         assert all(isinstance(t, Todo) for t in result)
         assert sorted(t.id for t in result) == ["1", "2"]
 
@@ -209,7 +209,7 @@ class TestAsyncPydanticCollection:
         with pytest.raises(pydantic.ValidationError):
             await model_todos.patch("1", {"done": "not a bool"})
         assert storage.read("todo", "1") == {"id": "1", "title": "a", "done": False}
-        assert await model_todos.filter() == [Todo(id="1", title="a")]
+        assert await model_todos.items() == [Todo(id="1", title="a")]
 
     async def test_invalid_model_is_not_stored(self, model_todos, storage):
         todo = Todo(id="1", title="a")

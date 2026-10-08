@@ -25,9 +25,9 @@ def mongo_container():
 
 @pytest.fixture()
 def mongo_client(mongo_container):
-    """Return a MongoClient and drop the inventory DB before each test."""
+    """Return a MongoClient and drop the collection DB before each test."""
     client = mongo_container.get_connection_client()
-    client.drop_database("inventory")
+    client.drop_database("collection")
     return client
 
 

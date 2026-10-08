@@ -53,8 +53,8 @@ class TestAsyncFileStorageInit:
         with pytest.raises(ValueError, match="does not exist"):
             async_cls(str(tmp_path / "missing"))
 
-    def test_exposes_inventory_dir(self, storage, base_dir):
-        assert storage.inventory_dir == base_dir
+    def test_exposes_collection_dir(self, storage, base_dir):
+        assert storage.collection_dir == base_dir
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +128,7 @@ class TestAsyncFileStorageBehaviour:
         assert sorted(await storage.akeys("todo"), key=int) == [str(i) for i in range(30)]
         assert len(await storage.aitems("todo")) == 30
 
-    async def test_works_with_async_inventory(self, storage):
+    async def test_works_with_async_collection(self, storage):
         todos = AsyncCollection(item_type="todo", storage=storage)
         await todos.save({"id": "1", "done": False})
         assert await todos.patch("1", {"done": True}) == {"id": "1", "done": True}

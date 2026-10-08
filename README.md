@@ -226,9 +226,9 @@ client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 storage = RedisStorage(redis_client=client)
 ```
 
-Each item type is one Redis hash, `inventory:{item_type}`, mapping item ids to
+Each item type is one Redis hash, `collection:{item_type}`, mapping item ids to
 JSON-encoded items, so value types (numbers, booleans, lists, nested dicts) are
-preserved. Pass `key_prefix="myapp:"` to use a different prefix than `inventory:`.
+preserved. Pass `key_prefix="myapp:"` to use a different prefix than `collection:`.
 
 Pass a pre-configured `redis.Redis` client (sync); `decode_responses` may be on or off.
 Requires `redis-py`. `AsyncRedisStorage` takes a `redis.asyncio.Redis` client
@@ -244,7 +244,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017")
 storage = MongoDBStorage(mongo_client=client)
 ```
 
-Items are stored in the `inventory` database, one collection per `item_type`.
+Items are stored in the `collection` database, one collection per `item_type`.
 The MongoDB `_id` field is stripped from results automatically.
 Pass a pre-configured `pymongo.MongoClient`. Requires `pymongo`. `AsyncMongoDBStorage`
 takes a `pymongo.AsyncMongoClient` and uses the same layout, so sync and async adapters
@@ -282,7 +282,7 @@ if item is not None:
 ```
 
 The model type is inferred from `model_class`, so type checkers know that
-`todos.get()` returns `Todo | None` and `todos.filter()` returns `list[Todo]`.
+`todos.get()` returns `Todo | None` and `todos.items()` returns `list[Todo]`.
 `todos.keys()` returns the item ids (`list[str]`) without loading or validating
 any items.
 
@@ -373,7 +373,7 @@ uv run python examples/async_sqlite_example.py
 ```
 
 The file-based and SQLite examples write to `data/` in the current directory
-(ignored by git); set `INVENTORY_DIR` or `SQLITE_DB_PATH` to change that. The MongoDB
+(ignored by git); set `OBJBASE_DATA_DIR` or `SQLITE_DB_PATH` to change that. The MongoDB
 examples need a running server — `docker run --rm -p 27017:27017 mongo:7.0` — and
 connect to `MONGODB_URI` (default `mongodb://localhost:27017`).
 

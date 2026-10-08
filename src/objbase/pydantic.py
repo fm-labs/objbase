@@ -48,37 +48,37 @@ class PydanticCollection[M: pydantic.BaseModel]:
 
     def __init__(self, item_type: str, storage: Storage, model_class: type[M]):
         self.model_class = model_class
-        self.inventory = Collection(item_type, storage)
+        self.collection = Collection(item_type, storage)
 
     @property
     def item_type(self) -> str:
-        return self.inventory.item_type
+        return self.collection.item_type
 
     @property
     def storage(self) -> Storage:
-        return self.inventory.storage
+        return self.collection.storage
 
     def keys(self) -> list[str]:
-        return self.inventory.keys()
+        return self.collection.keys()
 
-    def filter(self) -> list[M]:
-        return [self.model_class.model_validate(item) for item in self.inventory.items()]
+    def items(self) -> list[M]:
+        return [self.model_class.model_validate(item) for item in self.collection.items()]
 
     def save(self, model: M) -> M:
-        return self.model_class.model_validate(self.inventory.save(_validated(self.model_class, model)))
+        return self.model_class.model_validate(self.collection.save(_validated(self.model_class, model)))
 
     def get(self, id: str) -> M | None:
-        item = self.inventory.get(id)
+        item = self.collection.get(id)
         if item is None:
             return None
         return self.model_class.model_validate(item)
 
     def patch(self, id: str, data: Item | M) -> M:
-        item = _patched(self.model_class, self.item_type, id, self.inventory.get(id), data)
-        return self.model_class.model_validate(self.inventory.save(item))
+        item = _patched(self.model_class, self.item_type, id, self.collection.get(id), data)
+        return self.model_class.model_validate(self.collection.save(item))
 
     def delete(self, id: str) -> bool:
-        return self.inventory.delete(id)
+        return self.collection.delete(id)
 
 
 class AsyncPydanticCollection[M: pydantic.BaseModel]:
@@ -89,34 +89,34 @@ class AsyncPydanticCollection[M: pydantic.BaseModel]:
 
     def __init__(self, item_type: str, storage: AsyncStorage, model_class: type[M]):
         self.model_class = model_class
-        self.inventory = AsyncCollection(item_type, storage)
+        self.collection = AsyncCollection(item_type, storage)
 
     @property
     def item_type(self) -> str:
-        return self.inventory.item_type
+        return self.collection.item_type
 
     @property
     def storage(self) -> AsyncStorage:
-        return self.inventory.storage
+        return self.collection.storage
 
     async def keys(self) -> list[str]:
-        return await self.inventory.keys()
+        return await self.collection.keys()
 
-    async def filter(self) -> list[M]:
-        return [self.model_class.model_validate(item) for item in await self.inventory.items()]
+    async def items(self) -> list[M]:
+        return [self.model_class.model_validate(item) for item in await self.collection.items()]
 
     async def save(self, model: M) -> M:
-        return self.model_class.model_validate(await self.inventory.save(_validated(self.model_class, model)))
+        return self.model_class.model_validate(await self.collection.save(_validated(self.model_class, model)))
 
     async def get(self, id: str) -> M | None:
-        item = await self.inventory.get(id)
+        item = await self.collection.get(id)
         if item is None:
             return None
         return self.model_class.model_validate(item)
 
     async def patch(self, id: str, data: Item | M) -> M:
-        item = _patched(self.model_class, self.item_type, id, await self.inventory.get(id), data)
-        return self.model_class.model_validate(await self.inventory.save(item))
+        item = _patched(self.model_class, self.item_type, id, await self.collection.get(id), data)
+        return self.model_class.model_validate(await self.collection.save(item))
 
     async def delete(self, id: str) -> bool:
-        return await self.inventory.delete(id)
+        return await self.collection.delete(id)

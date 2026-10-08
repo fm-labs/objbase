@@ -47,7 +47,7 @@ class TestAsyncRedisStorageWrite:
 
     async def test_write_stores_item_in_type_hash(self, storage, redis_client):
         await storage.awrite("todo", {"id": "1", "title": "Buy milk"})
-        assert await redis_client.hexists("inventory:todo", "1")
+        assert await redis_client.hexists("collection:todo", "1")
 
     async def test_write_stores_all_fields(self, storage):
         item = {"id": "1", "title": "Buy milk", "done": "false"}
@@ -151,7 +151,7 @@ class TestAsyncRedisStorageDelete:
     async def test_delete_removes_item_from_redis(self, storage, redis_client):
         await storage.awrite("todo", {"id": "1"})
         await storage.adelete("todo", "1")
-        assert not await redis_client.hexists("inventory:todo", "1")
+        assert not await redis_client.hexists("collection:todo", "1")
 
     async def test_delete_item_no_longer_readable(self, storage):
         await storage.awrite("todo", {"id": "1"})

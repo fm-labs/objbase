@@ -55,7 +55,7 @@ class TestLocalFileStorageInit:
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
         storage = LocalFileStorage(base_dir)
-        assert storage.inventory_dir == base_dir
+        assert storage.collection_dir == base_dir
 
 
 class TestLocalFileStorageSelect:
@@ -162,7 +162,7 @@ class TestLocalDirectoryStorageInit:
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
         storage = LocalDirectoryStorage(base_dir)
-        assert storage.inventory_dir == base_dir
+        assert storage.collection_dir == base_dir
 
 
 class TestLocalDirectoryStorageSelect:

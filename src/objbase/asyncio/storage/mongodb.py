@@ -18,7 +18,7 @@ class AsyncMongoDBStorage(AsyncStorage):
         self.mongo_client = mongo_client
 
     def get_mongo_collection(self, item_type: str) -> "AsyncCollection[Item]":
-        db = self.mongo_client["inventory"]
+        db = self.mongo_client["collection"]
         return db[item_type]
 
     async def akeys(self, item_type: str) -> list[str]:

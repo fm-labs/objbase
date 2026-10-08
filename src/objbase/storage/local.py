@@ -62,7 +62,7 @@ def _contained_path(real_base: str, *parts: str) -> str:
 
 
 class LocalFileStorage(Storage):
-    """Simple file-based storage that saves all items of a given inventory type in a single JSON file.
+    """Simple file-based storage that saves all items of a given collection type in a single JSON file.
 
     Safe for concurrent use by multiple threads and processes on the same machine:
     writes hold an exclusive lock on ``.{item_type}.json.lock`` for the whole
@@ -71,9 +71,9 @@ class LocalFileStorage(Storage):
     """
 
     def __init__(self, base_dir: str):
-        self.inventory_dir = base_dir
-        if not os.path.exists(self.inventory_dir):
-            raise ValueError(f"Base directory {self.inventory_dir} does not exist.")
+        self.collection_dir = base_dir
+        if not os.path.exists(self.collection_dir):
+            raise ValueError(f"Base directory {self.collection_dir} does not exist.")
         self._real_base = os.path.realpath(base_dir)
 
     def keys(self, item_type: str) -> list[str]:
@@ -136,7 +136,7 @@ class LocalFileStorage(Storage):
 
 
 class LocalDirectoryStorage(Storage):
-    """Alternative file-based storage that uses a directory per inventory type and individual files per item.
+    """Alternative file-based storage that uses a directory per collection type and individual files per item.
 
     Each type directory also holds an index file (``.index``) listing the ids of
     all items of that type, one per line, so ``keys()`` doesn't have to scan the
@@ -148,9 +148,9 @@ class LocalDirectoryStorage(Storage):
     INDEX_FILE = ".index"
 
     def __init__(self, base_dir: str):
-        self.inventory_dir = base_dir
-        if not os.path.exists(self.inventory_dir):
-            raise ValueError(f"Base directory {self.inventory_dir} does not exist.")
+        self.collection_dir = base_dir
+        if not os.path.exists(self.collection_dir):
+            raise ValueError(f"Base directory {self.collection_dir} does not exist.")
         self._real_base = os.path.realpath(base_dir)
 
     def _type_dir(self, item_type: str) -> str:

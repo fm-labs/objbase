@@ -9,13 +9,13 @@ if TYPE_CHECKING:
 
 
 class MongoDBStorage(Storage):
-    """MongoDB-based storage implementation for inventory items."""
+    """MongoDB-based storage implementation for collection items."""
 
     def __init__(self, mongo_client: "MongoClient[Item]"):
         self.mongo_client = mongo_client
 
     def get_mongo_collection(self, item_type: str) -> "Collection[Item]":
-        db = self.mongo_client["inventory"]
+        db = self.mongo_client["collection"]
         return db[item_type]
 
     def keys(self, item_type: str) -> list[str]:

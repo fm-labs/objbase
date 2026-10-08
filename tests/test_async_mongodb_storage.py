@@ -26,9 +26,9 @@ def mongo_container():
 
 @pytest.fixture()
 async def mongo_client(mongo_container):
-    """Return an AsyncMongoClient and drop the inventory DB before each test."""
+    """Return an AsyncMongoClient and drop the collection DB before each test."""
     client: pymongo.AsyncMongoClient[dict[str, Any]] = pymongo.AsyncMongoClient(mongo_container.get_connection_url())
-    await client.drop_database("inventory")
+    await client.drop_database("collection")
     yield client
     await client.close()
 
