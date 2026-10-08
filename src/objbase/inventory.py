@@ -33,7 +33,7 @@ class Inventory:
     def keys(self) -> list[str]:
         return self.storage.keys(self.item_type)
 
-    def filter(self) -> list[Item]:
+    def items(self) -> list[Item]:
         return self.storage.items(self.item_type)
 
     def get(self, id: str) -> Item | None:

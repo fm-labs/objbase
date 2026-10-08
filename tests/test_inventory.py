@@ -79,10 +79,10 @@ class TestInventoryGetFilter:
     def test_filter_returns_all_items(self, todos):
         todos.save({"id": "1"})
         todos.save({"id": "2"})
-        assert sorted(i["id"] for i in todos.filter()) == ["1", "2"]
+        assert sorted(i["id"] for i in todos.items()) == ["1", "2"]
 
     def test_filter_empty(self, todos):
-        assert todos.filter() == []
+        assert todos.items() == []
 
 
 class TestInventoryPatch:

@@ -62,7 +62,7 @@ class PydanticInventory[M: pydantic.BaseModel]:
         return self.inventory.keys()
 
     def filter(self) -> list[M]:
-        return [self.model_class.model_validate(item) for item in self.inventory.filter()]
+        return [self.model_class.model_validate(item) for item in self.inventory.items()]
 
     def save(self, model: M) -> M:
         return self.model_class.model_validate(self.inventory.save(_validated(self.model_class, model)))

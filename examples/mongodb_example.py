@@ -15,7 +15,7 @@ todos_inventory = Inventory(item_type="todo", storage=storage)
 # Create some to-do items
 todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})
 todos_inventory.save({"id": "2", "name": "Walk the dog", "status": "pending"})
-print("All To-dos:", todos_inventory.filter())
+print("All To-dos:", todos_inventory.items())
 
 # Update a to-do item
 updated_todo = todos_inventory.patch("1", {"status": "completed"})

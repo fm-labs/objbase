@@ -50,7 +50,7 @@ todos.save({"id": "1", "title": "Buy milk", "done": False})
 todos.save({"id": "2", "title": "Walk dog", "done": False})
 
 todos.get("1")  # → {"id": "1", "title": "Buy milk", "done": False}
-todos.filter()  # → [{"id": "1", ...}, {"id": "2", ...}]
+todos.items()  # → [{"id": "1", ...}, {"id": "2", ...}]
 todos.keys()  # → ["1", "2"] (order unspecified)
 todos.patch("1", {"done": True})  # → {"id": "1", ..., "done": True}
 todos.delete("1")  # → True
@@ -460,20 +460,20 @@ from objbase.storage.sqlite import SQLiteStorage
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.storage = SQLiteStorage("app.db")
-    yield
+  app.state.storage = SQLiteStorage("app.db")
+  yield
 
 
 app = FastAPI(lifespan=lifespan)
 
 
 def get_todos(request: Request) -> Inventory:
-    return Inventory(item_type="todo", storage=request.app.state.storage)
+  return Inventory(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")  # sync — runs in threadpool
 def list_todos(todos: Inventory = Depends(get_todos)):
-    return todos.filter()
+  return todos.items()
 ```
 
 ### 4. Override the dependency in tests
