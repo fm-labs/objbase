@@ -66,7 +66,8 @@ or from their submodules as in the examples below:
 |---|---|
 | `objbase.interface` | `Storage`, `AsyncStorage` protocols and the `Item` type |
 | `objbase.collection` | `Collection` |
-| `objbase.errors` | `CollectionError`, `ItemNotFoundError` |
+| `objbase.errors` | `CollectionError`, `ItemNotFoundError`, `ActionNotFoundError` |
+| `objbase.actions` | `ActionHandler`, `AsyncActionHandler`, `ActionParams`, `load_action_handler` |
 | `objbase.pydantic` | `PydanticCollection`, `AsyncPydanticCollection` (needs `objbase[pydantic]`) |
 | `objbase.storage.{inmemory,local,sqlite,redis,mongodb}` | Sync storage adapters |
 | `objbase.asyncio.collection` | `AsyncCollection` |
@@ -93,6 +94,7 @@ Errors are raised, not returned:
 | `patch` with data that changes the item's `id` | `ValueError` |
 | `patch` a missing item | `objbase.ItemNotFoundError` (a `CollectionError` and a `LookupError`) |
 | The storage backend reports a failed write | `objbase.CollectionError` |
+| `run_action` with an action that isn't registered | `objbase.ActionNotFoundError` (a `CollectionError` and a `LookupError`) |
 
 `CollectionError` is the base class of all objbase errors.
 
@@ -350,6 +352,83 @@ Passing a sync-only adapter (e.g. `SQLiteStorage`) to `AsyncCollection`
 raises `TypeError`; use its async counterpart (e.g. `AsyncSQLiteStorage`) instead.
 The adapter methods (`akeys`, `aitems`, `aread`, `awrite`, `adelete`)
 can also be called directly on the storage.
+
+---
+
+## Actions
+
+An action is a named operation on a single item. Register a handler on a
+collection, then run it by item id:
+
+```python
+from objbase import Collection, InMemoryStorage
+
+
+def set_status(item, params):
+    return {**item, "status": params["status"]}
+
+
+todos = Collection(item_type="todo", storage=InMemoryStorage())
+todos.register_action("set_status", set_status)
+
+todos.save({"id": "1", "title": "Buy milk", "status": "pending"})
+todos.run_action("1", "set_status", {"status": "done"})  # → {"id": "1", ..., "status": "done"}
+```
+
+A handler is called as `handler(item, params)` with the stored item and the
+params (`{}` if none are given):
+
+- If it returns an item, that item **replaces** the stored one (like `save`) and is
+  returned. It must keep the item's `id`, otherwise `ValueError` is raised and nothing is saved.
+- If it returns `None`, nothing is saved and the stored item is returned.
+- Exceptions raised by the handler propagate unchanged.
+
+`run_action` raises `ActionNotFoundError` for an unregistered action and
+`ItemNotFoundError` for a missing item. Actions are registered per collection
+instance; registering a name again replaces its handler. Like `patch`, an action
+reads, changes and writes the item, so it is not atomic across concurrent writers.
+
+On `AsyncCollection`, `run_action` is a coroutine and handlers may be sync or
+async: async handlers are awaited, sync handlers run in a worker thread
+(`asyncio.to_thread`). `Collection` accepts only sync handlers and raises
+`TypeError` for an async one.
+
+```python
+async def set_status(item, params):
+    return {**item, "status": params["status"]}
+
+
+todos = AsyncCollection(item_type="todo", storage=storage)
+todos.register_action("set_status", set_status)
+await todos.run_action("1", "set_status", {"status": "done"})
+```
+
+### Loading handlers from a module
+
+`load_action_handler(module_name, action_name)` imports a module and returns
+the handler from its `actions` mapping (pass `attr_name=` to use another name):
+
+```python
+# myapp/todo_actions.py
+def set_status(item, params):
+    return {**item, "status": params["status"]}
+
+
+actions = {"set_status": set_status}
+```
+
+```python
+from objbase import load_action_handler
+
+todos.register_action("set_status", load_action_handler("myapp.todo_actions", "set_status"))
+```
+
+It raises `ActionNotFoundError` if the module has no such mapping or action, and
+`TypeError` if the entry isn't callable. Errors from importing the module itself
+propagate unchanged. Only pass module names you trust: importing a module runs its code.
+
+Runs are logged at `DEBUG` level on the `objbase.collection` and
+`objbase.asyncio.collection` loggers.
 
 ---
 

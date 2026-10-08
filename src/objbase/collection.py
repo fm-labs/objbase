@@ -1,7 +1,12 @@
+import inspect
+import logging
 from typing import Any
 
-from objbase.errors import CollectionError, ItemNotFoundError
+from objbase.actions import ActionHandler, ActionParams, check_action_name, check_action_result
+from objbase.errors import ActionNotFoundError, CollectionError, ItemNotFoundError
 from objbase.interface import Item, Storage
+
+logger = logging.getLogger(__name__)
 
 
 def require_item_id(item: Item) -> Any:
@@ -29,6 +34,7 @@ class Collection:
     def __init__(self, item_type: str, storage: Storage):
         self.storage = storage
         self.item_type = item_type
+        self.actions: dict[str, ActionHandler] = {}
 
     def keys(self) -> list[str]:
         return self.storage.keys(self.item_type)
@@ -57,3 +63,31 @@ class Collection:
 
     def delete(self, id: str) -> bool:
         return self.storage.delete(self.item_type, id)
+
+    def register_action(self, name: str, handler: ActionHandler) -> None:
+        """Register ``handler`` as action ``name``, replacing any handler already registered under that name."""
+        check_action_name(name)
+        if inspect.iscoroutinefunction(handler):
+            raise TypeError(f"Action '{name}' has an async handler; register it on an AsyncCollection instead.")
+        self.actions[name] = handler
+
+    def run_action(self, id: str, name: str, params: ActionParams | None = None) -> Item:
+        """Run action ``name`` on item ``id`` and return the resulting item.
+
+        If the handler returns an item, it is saved (replacing the stored item) and
+        returned; if it returns ``None``, the stored item is returned unchanged.
+        """
+        handler = self.actions.get(name)
+        if handler is None:
+            raise ActionNotFoundError(name, f"item type '{self.item_type}'")
+        item = self.storage.read(self.item_type, id)
+        if item is None:
+            raise ItemNotFoundError(self.item_type, id)
+        logger.debug("Running action %r on %s item %r", name, self.item_type, id)
+        result = handler(item, params or {})
+        if result is None:
+            logger.debug("Action %r on %s item %r left the item unchanged", name, self.item_type, id)
+            return item
+        check_action_result(id, result)
+        logger.debug("Action %r on %s item %r returned an updated item; saving", name, self.item_type, id)
+        return self.save(result)
