@@ -385,8 +385,8 @@ class TestFileStorageSymlinkContainment:
         real.mkdir()
         symlink(str(real), str(tmp_path / "link"))
         for storage in (
-                DirectoryBasedStorage(str(tmp_path / "link")),
-                FileBasedStorage(str(tmp_path / "link")),
+            DirectoryBasedStorage(str(tmp_path / "link")),
+            FileBasedStorage(str(tmp_path / "link")),
         ):
             storage.write("todo", {"id": "1"})
             assert storage.read("todo", "1") == {"id": "1"}

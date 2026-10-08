@@ -264,21 +264,21 @@ from objbase.storage.inmemory_storage import InMemoryStorage
 
 
 class Todo(BaseModel):
-  id: str
-  title: str
-  done: bool = False
+    id: str
+    title: str
+    done: bool = False
 
 
 todos = PydanticInventory(
-  item_type="todo",
-  storage=InMemoryStorage(),
-  model_class=Todo,
+    item_type="todo",
+    storage=InMemoryStorage(),
+    model_class=Todo,
 )
 
 todos.save(Todo(id="1", title="Buy milk"))
 item = todos.get("1")  # returns a Todo instance (or None), not a dict
 if item is not None:
-  print(item.done)  # False
+    print(item.done)  # False
 ```
 
 The model type is inferred from `model_class`, so type checkers know that
@@ -395,10 +395,10 @@ from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  client = redis.asyncio.Redis(host="localhost", port=6379)
-  app.state.storage = AsyncRedisStorage(redis_client=client)
-  yield
-  await client.aclose()
+    client = redis.asyncio.Redis(host="localhost", port=6379)
+    app.state.storage = AsyncRedisStorage(redis_client=client)
+    yield
+    await client.aclose()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -416,33 +416,33 @@ from objbase.errors import ItemNotFoundError
 
 
 def get_todos(request: Request) -> AsyncInventory:
-  return AsyncInventory(item_type="todo", storage=request.app.state.storage)
+    return AsyncInventory(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")
 async def list_todos(todos: AsyncInventory = Depends(get_todos)):
-  return await todos.filter()
+    return await todos.filter()
 
 
 @app.get("/todos/{todo_id}")
 async def get_todo(todo_id: str, todos: AsyncInventory = Depends(get_todos)):
-  item = await todos.get(todo_id)
-  if item is None:
-    raise HTTPException(status_code=404)
-  return item
+    item = await todos.get(todo_id)
+    if item is None:
+        raise HTTPException(status_code=404)
+    return item
 
 
 @app.post("/todos")
 async def create_todo(item: dict, todos: AsyncInventory = Depends(get_todos)):
-  return await todos.save(item)
+    return await todos.save(item)
 
 
 @app.patch("/todos/{todo_id}")
 async def update_todo(todo_id: str, data: dict, todos: AsyncInventory = Depends(get_todos)):
-  try:
-    return await todos.patch(todo_id, data)
-  except ItemNotFoundError:
-    raise HTTPException(status_code=404)
+    try:
+        return await todos.patch(todo_id, data)
+    except ItemNotFoundError:
+        raise HTTPException(status_code=404)
 ```
 
 ### 3. Sync routes with SQLite
@@ -460,20 +460,20 @@ from objbase.storage.sqlite_storage import SQLiteStorage
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  app.state.storage = SQLiteStorage("app.db")
-  yield
+    app.state.storage = SQLiteStorage("app.db")
+    yield
 
 
 app = FastAPI(lifespan=lifespan)
 
 
 def get_todos(request: Request) -> Inventory:
-  return Inventory(item_type="todo", storage=request.app.state.storage)
+    return Inventory(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")  # sync — runs in threadpool
 def list_todos(todos: Inventory = Depends(get_todos)):
-  return todos.filter()
+    return todos.filter()
 ```
 
 ### 4. Override the dependency in tests
@@ -491,7 +491,7 @@ test_storage = InMemoryStorage()
 
 
 def override_todos():
-  return AsyncInventory(item_type="todo", storage=test_storage)
+    return AsyncInventory(item_type="todo", storage=test_storage)
 
 
 app.dependency_overrides[get_todos] = override_todos
@@ -598,7 +598,7 @@ from objbase.interface import Storage
 
 
 class MyCustomStorage(Storage):  # explicit, but optional
-  ...
+    ...
 ```
 
 ### Runtime checks with `isinstance`
