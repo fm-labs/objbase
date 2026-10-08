@@ -6,7 +6,7 @@ import pytest
 from objbase.errors import InventoryError, ItemNotFoundError
 from objbase.inventory import Inventory
 from objbase.pydantic import PydanticInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 @pytest.fixture()

@@ -61,7 +61,7 @@ def _contained_path(real_base: str, *parts: str) -> str:
     return path
 
 
-class FileBasedStorage(Storage):
+class LocalFileStorage(Storage):
     """Simple file-based storage that saves all items of a given inventory type in a single JSON file.
 
     Safe for concurrent use by multiple threads and processes on the same machine:
@@ -135,7 +135,7 @@ class FileBasedStorage(Storage):
         return items
 
 
-class DirectoryBasedStorage(Storage):
+class LocalDirectoryStorage(Storage):
     """Alternative file-based storage that uses a directory per inventory type and individual files per item.
 
     Each type directory also holds an index file (``.index``) listing the ids of

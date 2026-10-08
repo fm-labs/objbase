@@ -1,5 +1,5 @@
-from objbase.asyncio.storage.threaded_storage import ThreadedAsyncStorage
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.asyncio.storage.threaded import ThreadedAsyncStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 
 class AsyncSQLiteStorage(ThreadedAsyncStorage[SQLiteStorage]):

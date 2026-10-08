@@ -1,7 +1,7 @@
 import json
 
 from objbase.interface import AsyncStorage, Item
-from objbase.storage.redis_storage import DEFAULT_KEY_PREFIX, RedisHashClient, decode_key, redis_type_key
+from objbase.storage.redis import DEFAULT_KEY_PREFIX, RedisHashClient, decode_key, redis_type_key
 
 
 class AsyncRedisStorage(AsyncStorage):

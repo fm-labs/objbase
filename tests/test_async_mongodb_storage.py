@@ -7,7 +7,7 @@ import pymongo
 import pytest
 from testcontainers.community.mongodb import MongoDbContainer
 
-from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
+from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
 MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
@@ -186,7 +186,7 @@ class TestAsyncMongoDBStorageDelete:
 
 class TestAsyncMongoDBStorageLayout:
     async def test_shares_data_with_sync_storage(self, mongo_container, storage):
-        from objbase.storage.mongodb_storage import MongoDBStorage
+        from objbase.storage.mongodb import MongoDBStorage
 
         MongoDBStorage(mongo_container.get_connection_client()).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}

@@ -2,7 +2,7 @@
 
 import pytest
 
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 @pytest.fixture()

@@ -3,7 +3,7 @@ import asyncio
 import pydantic
 
 from objbase.pydantic import AsyncPydanticInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 class Todo(pydantic.BaseModel):

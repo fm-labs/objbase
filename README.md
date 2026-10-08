@@ -103,8 +103,8 @@ Errors are raised, not returned:
 | Adapter | Sync class | Async class | When to use |
 |---|---|---|---|
 | In-Memory | `InMemoryStorage` | same class | Testing / prototyping — volatile |
-| File (one file per type) | `FileBasedStorage` | `AsyncFileBasedStorage` | Simple persistence for small datasets |
-| File (one file per item) | `DirectoryBasedStorage` | `AsyncDirectoryBasedStorage` | Medium datasets; per-item file operations |
+| File (one file per type) | `LocalFileStorage` | `AsyncLocalFileStorage` | Simple persistence for small datasets |
+| File (one file per item) | `LocalDirectoryStorage` | `AsyncLocalDirectoryStorage` | Medium datasets; per-item file operations |
 | SQLite | `SQLiteStorage` | `AsyncSQLiteStorage` | ACID persistence with zero external deps |
 | Redis | `RedisStorage` | `AsyncRedisStorage` | High-performance / distributed access |
 | MongoDB | `MongoDBStorage` | `AsyncMongoDBStorage` | Document-oriented storage and complex queries |
@@ -117,7 +117,7 @@ MongoDB ones use the drivers' native async clients.
 ### In-Memory
 
 ```python
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 storage = InMemoryStorage()
 ```
@@ -129,9 +129,9 @@ sync counterparts.
 ### File-Based (single file per type)
 
 ```python
-from objbase.storage.file_storage import FileBasedStorage
+from objbase.storage.local import LocalFileStorage
 
-storage = FileBasedStorage(base_dir="/var/data/myapp")
+storage = LocalFileStorage(base_dir="/var/data/myapp")
 ```
 
 All items of one type are stored in `{base_dir}/{item_type}.json`.
@@ -147,16 +147,16 @@ mid-write cannot corrupt data. Lock files are left in place after use.
 Every write rewrites the whole type file, so this adapter suits small datasets.
 Locks are advisory and may not work on network file systems (NFS, SMB).
 
-`AsyncFileBasedStorage(base_dir=...)` is the async counterpart. It uses the
+`AsyncLocalFileStorage(base_dir=...)` is the async counterpart. It uses the
 same files and locks, running each call in a worker thread (`asyncio.to_thread`),
 so it can share a directory with the sync adapter.
 
 ### File-Based (one file per item)
 
 ```python
-from objbase.storage.file_storage import DirectoryBasedStorage
+from objbase.storage.local import LocalDirectoryStorage
 
-storage = DirectoryBasedStorage(base_dir="/var/data/myapp")
+storage = LocalDirectoryStorage(base_dir="/var/data/myapp")
 ```
 
 Items are stored at `{base_dir}/{item_type}/{id}.json`.
@@ -179,14 +179,14 @@ correct with concurrent writers across threads and processes; concurrent writes
 to the same item are last-writer-wins. Locks are advisory and may not work on
 network file systems (NFS, SMB).
 
-`AsyncDirectoryBasedStorage(base_dir=...)` is the async counterpart. It uses
+`AsyncLocalDirectoryStorage(base_dir=...)` is the async counterpart. It uses
 the same files, index and locks, running each call in a worker thread
 (`asyncio.to_thread`); rebuild its index with `await storage.arebuild_index(item_type)`.
 
 ### Path safety
 
 Both file-based adapters build file paths from item types (and, for
-`DirectoryBasedStorage`, ids), so they guard against path traversal:
+`LocalDirectoryStorage`, ids), so they guard against path traversal:
 
 - Names must be a single path component: empty names, `.`, `..`, and names
   containing `/`, `\`, NUL or newlines are rejected. On Windows, `< > : " | ? *`
@@ -205,7 +205,7 @@ check and the operation. Don't give untrusted users write access to it.
 ### SQLite
 
 ```python
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 storage = SQLiteStorage(db_path="myapp.db")
 ```
@@ -220,7 +220,7 @@ also needs no extra dependencies.
 
 ```python
 import redis
-from objbase.storage.redis_storage import RedisStorage
+from objbase.storage.redis import RedisStorage
 
 client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 storage = RedisStorage(redis_client=client)
@@ -238,7 +238,7 @@ and uses the same layout, so sync and async adapters can share data.
 
 ```python
 import pymongo
-from objbase.storage.mongodb_storage import MongoDBStorage
+from objbase.storage.mongodb import MongoDBStorage
 
 client = pymongo.MongoClient("mongodb://localhost:27017")
 storage = MongoDBStorage(mongo_client=client)
@@ -260,7 +260,7 @@ Use `PydanticInventory` to validate items against a Pydantic `BaseModel`.
 ```python
 from pydantic import BaseModel
 from objbase.pydantic import PydanticInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 class Todo(BaseModel):
@@ -304,7 +304,7 @@ takes an async storage adapter:
 
 ```python
 import redis.asyncio
-from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+from objbase.asyncio.storage.redis import AsyncRedisStorage
 from objbase.pydantic import AsyncPydanticInventory
 
 todos = AsyncPydanticInventory(
@@ -323,14 +323,14 @@ item = await todos.get("1")  # Todo | None
 
 `AsyncInventory` has the same methods and behaviour as `Inventory`, but every
 method is a coroutine. It works with any `AsyncStorage` adapter:
-`AsyncFileBasedStorage`, `AsyncDirectoryBasedStorage`, `AsyncSQLiteStorage`,
+`AsyncLocalFileStorage`, `AsyncLocalDirectoryStorage`, `AsyncSQLiteStorage`,
 `AsyncRedisStorage`, `AsyncMongoDBStorage`,
 or `InMemoryStorage` for tests.
 
 ```python
 import redis.asyncio
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+from objbase.asyncio.storage.redis import AsyncRedisStorage
 
 client = redis.asyncio.Redis(host="localhost", port=6379)
 todos = AsyncInventory(item_type="todo", storage=AsyncRedisStorage(client))
@@ -362,8 +362,8 @@ Runnable scripts are in [`examples/`](examples/):
 | `pydantic_example.py` | `PydanticInventory` (in-memory) |
 | `async_example.py` | `AsyncInventory` (in-memory) |
 | `async_pydantic_example.py` | `AsyncPydanticInventory` (in-memory) |
-| `async_file_example.py` | `AsyncFileBasedStorage` |
-| `async_directory_example.py` | `AsyncDirectoryBasedStorage`, incl. concurrent saves and `arebuild_index` |
+| `async_file_example.py` | `AsyncLocalFileStorage` |
+| `async_directory_example.py` | `AsyncLocalDirectoryStorage`, incl. concurrent saves and `arebuild_index` |
 | `async_sqlite_example.py` | `AsyncSQLiteStorage` |
 | `mongodb_example.py` | `MongoDBStorage`, incl. a MongoDB `query` filter |
 | `async_mongodb_example.py` | `AsyncMongoDBStorage`, incl. a MongoDB `query` filter |
@@ -390,7 +390,7 @@ once at startup and tear them down cleanly on shutdown.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import redis.asyncio
-from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+from objbase.asyncio.storage.redis import AsyncRedisStorage
 
 
 @asynccontextmanager
@@ -455,7 +455,7 @@ automatically, keeping the event loop unblocked.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, Request
 from objbase.inventory import Inventory
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 
 @asynccontextmanager
@@ -484,7 +484,7 @@ for Redis. Create it once so data persists across requests:
 
 ```python
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 from fastapi.testclient import TestClient
 
 test_storage = InMemoryStorage()

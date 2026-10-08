@@ -17,12 +17,12 @@ import pytest
 
 from objbase import AsyncStorage
 from objbase.interface import Item, Storage
-from objbase.storage.file_storage import (
-    DirectoryBasedStorage,
-    FileBasedStorage,
+from objbase.storage.inmemory import InMemoryStorage
+from objbase.storage.local import (
+    LocalDirectoryStorage,
+    LocalFileStorage,
 )
-from objbase.storage.inmemory_storage import InMemoryStorage
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
 MONGO_IMAGE = os.getenv("OBJBASE_TEST_MONGO_IMAGE", "mongo:7.0")
@@ -68,11 +68,11 @@ def _inmemory(request, tmp_path):
 
 
 def _file(request, tmp_path):
-    return FileBasedStorage(str(tmp_path))
+    return LocalFileStorage(str(tmp_path))
 
 
 def _directory(request, tmp_path):
-    return DirectoryBasedStorage(str(tmp_path))
+    return LocalDirectoryStorage(str(tmp_path))
 
 
 def _sqlite(request, tmp_path):
@@ -80,7 +80,7 @@ def _sqlite(request, tmp_path):
 
 
 def _redis(request, tmp_path):
-    from objbase.storage.redis_storage import RedisStorage
+    from objbase.storage.redis import RedisStorage
 
     client = request.getfixturevalue("redis_container").get_client()
     client.flushdb()
@@ -88,7 +88,7 @@ def _redis(request, tmp_path):
 
 
 def _mongodb(request, tmp_path):
-    from objbase.storage.mongodb_storage import MongoDBStorage
+    from objbase.storage.mongodb import MongoDBStorage
 
     client = request.getfixturevalue("mongo_container").get_connection_client()
     client.drop_database("inventory")
@@ -254,19 +254,19 @@ async def _async_inmemory(request):
 
 
 async def _async_file(request):
-    from objbase.asyncio.storage.file_storage import AsyncFileBasedStorage
+    from objbase.asyncio.storage.local import AsyncLocalFileStorage
 
-    return AsyncFileBasedStorage(str(request.getfixturevalue("tmp_path")))
+    return AsyncLocalFileStorage(str(request.getfixturevalue("tmp_path")))
 
 
 async def _async_directory(request):
-    from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage
+    from objbase.asyncio.storage.local import AsyncLocalDirectoryStorage
 
-    return AsyncDirectoryBasedStorage(str(request.getfixturevalue("tmp_path")))
+    return AsyncLocalDirectoryStorage(str(request.getfixturevalue("tmp_path")))
 
 
 async def _async_sqlite(request):
-    from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
+    from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
 
     return AsyncSQLiteStorage(str(request.getfixturevalue("tmp_path") / "contract.db"))
 
@@ -274,7 +274,7 @@ async def _async_sqlite(request):
 async def _async_redis(request):
     import redis.asyncio
 
-    from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+    from objbase.asyncio.storage.redis import AsyncRedisStorage
 
     container = request.getfixturevalue("redis_container")
     client = redis.asyncio.Redis(
@@ -289,7 +289,7 @@ async def _async_redis(request):
 async def _async_mongodb(request):
     import pymongo
 
-    from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
+    from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
 
     url = request.getfixturevalue("mongo_container").get_connection_url()
     client: pymongo.AsyncMongoClient[Item] = pymongo.AsyncMongoClient(url)

@@ -6,7 +6,7 @@ import os
 import pymongo
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
+from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
 from objbase.interface import Item
 
 

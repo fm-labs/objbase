@@ -4,7 +4,7 @@ import pytest
 import redis.asyncio
 from testcontainers.community.redis import RedisContainer
 
-from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+from objbase.asyncio.storage.redis import AsyncRedisStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -196,7 +196,7 @@ class TestAsyncRedisStorageLayout:
             await client.aclose()
 
     async def test_shares_data_with_sync_storage(self, redis_container, storage):
-        from objbase.storage.redis_storage import RedisStorage
+        from objbase.storage.redis import RedisStorage
 
         RedisStorage(redis_container.get_client()).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}

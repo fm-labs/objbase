@@ -6,7 +6,7 @@ import pymongo
 
 from objbase.interface import Item
 from objbase.inventory import Inventory
-from objbase.storage.mongodb_storage import MongoDBStorage
+from objbase.storage.mongodb import MongoDBStorage
 
 client: pymongo.MongoClient[Item] = pymongo.MongoClient(os.getenv("MONGODB_URI", "mongodb://localhost:27017"))
 storage = MongoDBStorage(mongo_client=client)

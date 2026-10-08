@@ -1,4 +1,4 @@
-"""Tests for FileBasedStorage and DirectoryBasedStorage."""
+"""Tests for LocalFileStorage and LocalDirectoryStorage."""
 
 import json
 import os
@@ -10,9 +10,9 @@ import threading
 import pytest
 
 from objbase.interface import Item
-from objbase.storage.file_storage import (
-    DirectoryBasedStorage,
-    FileBasedStorage,
+from objbase.storage.local import (
+    LocalDirectoryStorage,
+    LocalFileStorage,
 )
 from objbase.util.file_util import locked
 
@@ -27,13 +27,13 @@ def base_dir(tmp_path) -> str:
 
 
 @pytest.fixture()
-def file_storage(base_dir) -> FileBasedStorage:
-    return FileBasedStorage(base_dir)
+def file_storage(base_dir) -> LocalFileStorage:
+    return LocalFileStorage(base_dir)
 
 
 @pytest.fixture()
-def dir_storage(base_dir) -> DirectoryBasedStorage:
-    return DirectoryBasedStorage(base_dir)
+def dir_storage(base_dir) -> LocalDirectoryStorage:
+    return LocalDirectoryStorage(base_dir)
 
 
 def seed_file(base_dir: str, item_type: str, items: list[Item]) -> None:
@@ -44,21 +44,21 @@ def seed_file(base_dir: str, item_type: str, items: list[Item]) -> None:
 
 
 # ===========================================================================
-# FileBasedStorage
+# LocalFileStorage
 # ===========================================================================
 
 
-class TestFileBasedStorageInit:
+class TestLocalFileStorageInit:
     def test_init_raises_on_missing_dir(self):
         with pytest.raises(ValueError, match="does not exist"):
-            FileBasedStorage("/nonexistent/path/xyz")
+            LocalFileStorage("/nonexistent/path/xyz")
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
-        storage = FileBasedStorage(base_dir)
+        storage = LocalFileStorage(base_dir)
         assert storage.inventory_dir == base_dir
 
 
-class TestFileBasedStorageSelect:
+class TestLocalFileStorageSelect:
     def test_select_returns_all_items(self, file_storage, base_dir):
         items = [{"id": "1", "name": "a"}, {"id": "2", "name": "b"}]
         seed_file(base_dir, "todo", items)
@@ -72,7 +72,7 @@ class TestFileBasedStorageSelect:
         assert file_storage.items("todo") == []
 
 
-class TestFileBasedStorageWrite:
+class TestLocalFileStorageWrite:
     def test_write_creates_new_item(self, file_storage, base_dir):
         seed_file(base_dir, "todo", [])
         item = {"id": "1", "title": "Buy milk"}
@@ -108,7 +108,7 @@ class TestFileBasedStorageWrite:
         assert len(file_storage.items("todo")) == 3
 
 
-class TestFileBasedStorageRead:
+class TestLocalFileStorageRead:
     def test_read_returns_item_by_id(self, file_storage, base_dir):
         item = {"id": "42", "title": "Hello"}
         seed_file(base_dir, "todo", [item])
@@ -127,7 +127,7 @@ class TestFileBasedStorageRead:
         assert file_storage.read("todo", "3") == {"id": "3", "val": 3}
 
 
-class TestFileBasedStorageDelete:
+class TestLocalFileStorageDelete:
     def test_delete_removes_item(self, file_storage, base_dir):
         seed_file(base_dir, "todo", [{"id": "1"}, {"id": "2"}])
         file_storage.delete("todo", "1")
@@ -151,21 +151,21 @@ class TestFileBasedStorageDelete:
 
 
 # ===========================================================================
-# DirectoryBasedStorage
+# LocalDirectoryStorage
 # ===========================================================================
 
 
-class TestDirectoryBasedStorageInit:
+class TestLocalDirectoryStorageInit:
     def test_init_raises_on_missing_dir(self):
         with pytest.raises(ValueError, match="does not exist"):
-            DirectoryBasedStorage("/nonexistent/path/xyz")
+            LocalDirectoryStorage("/nonexistent/path/xyz")
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
-        storage = DirectoryBasedStorage(base_dir)
+        storage = LocalDirectoryStorage(base_dir)
         assert storage.inventory_dir == base_dir
 
 
-class TestDirectoryBasedStorageSelect:
+class TestLocalDirectoryStorageSelect:
     def test_select_returns_empty_list_when_type_dir_missing(self, dir_storage):
         assert dir_storage.items("ghost") == []
 
@@ -189,7 +189,7 @@ class TestDirectoryBasedStorageSelect:
         assert notes == [{"id": "1", "kind": "note"}]
 
 
-class TestDirectoryBasedStorageWrite:
+class TestLocalDirectoryStorageWrite:
     def test_write_returns_true(self, dir_storage):
         assert dir_storage.write("todo", {"id": "1"}) is True
 
@@ -220,7 +220,7 @@ class TestDirectoryBasedStorageWrite:
         assert len(dir_storage.items("todo")) == 1
 
 
-class TestDirectoryBasedStorageRead:
+class TestLocalDirectoryStorageRead:
     def test_read_returns_item_by_id(self, dir_storage):
         item = {"id": "7", "title": "Test"}
         dir_storage.write("todo", item)
@@ -234,7 +234,7 @@ class TestDirectoryBasedStorageRead:
         assert dir_storage.read("ghost_type", "1") is None
 
 
-class TestDirectoryBasedStorageDelete:
+class TestLocalDirectoryStorageDelete:
     def test_delete_removes_item_and_returns_true(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         result = dir_storage.delete("todo", "1")
@@ -283,7 +283,7 @@ class TestFileStoragePathValidation:
     def test_dir_storage_traversal_writes_nothing_outside_base_dir(self, tmp_path):
         base = tmp_path / "base"
         base.mkdir()
-        storage = DirectoryBasedStorage(str(base))
+        storage = LocalDirectoryStorage(str(base))
         with pytest.raises(ValueError):
             storage.write("todo", {"id": "../../escaped"})
         assert list(tmp_path.rglob("escaped*")) == []
@@ -385,8 +385,8 @@ class TestFileStorageSymlinkContainment:
         real.mkdir()
         symlink(str(real), str(tmp_path / "link"))
         for storage in (
-            DirectoryBasedStorage(str(tmp_path / "link")),
-            FileBasedStorage(str(tmp_path / "link")),
+            LocalDirectoryStorage(str(tmp_path / "link")),
+            LocalFileStorage(str(tmp_path / "link")),
         ):
             storage.write("todo", {"id": "1"})
             assert storage.read("todo", "1") == {"id": "1"}
@@ -421,14 +421,14 @@ class TestFileStorageWindowsNames:
 
 WRITER_PROCESS = """
 import sys
-from objbase.storage.file_storage import FileBasedStorage
-storage = FileBasedStorage(sys.argv[1])
+from objbase.storage.local import LocalFileStorage
+storage = LocalFileStorage(sys.argv[1])
 for i in range(int(sys.argv[3])):
     storage.write("todo", {"id": f"{sys.argv[2]}-{i}"})
 """
 
 
-class TestFileBasedStorageConcurrency:
+class TestLocalFileStorageConcurrency:
     def test_concurrent_processes_do_not_lose_writes(self, file_storage, base_dir):
         workers, per_worker = 4, 25
         procs = [
@@ -478,7 +478,7 @@ class TestFileBasedStorageConcurrency:
             assert result == [[{"id": "1"}]]
 
 
-class TestFileBasedStorageFiles:
+class TestLocalFileStorageFiles:
     def test_failed_write_keeps_original_file(self, file_storage, base_dir):
         file_storage.write("todo", {"id": "1"})
         with pytest.raises(TypeError):
@@ -511,7 +511,7 @@ class TestFileBasedStorageFiles:
         assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
 
 
-class TestDirectoryBasedStorageFiles:
+class TestLocalDirectoryStorageFiles:
     def test_failed_write_leaves_no_partial_item(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         with pytest.raises(TypeError):
@@ -534,8 +534,8 @@ def read_index(base_dir: str, item_type: str) -> list[str]:
 
 DIR_WRITER_PROCESS = """
 import sys
-from objbase.storage.file_storage import DirectoryBasedStorage
-storage = DirectoryBasedStorage(sys.argv[1])
+from objbase.storage.local import LocalDirectoryStorage
+storage = LocalDirectoryStorage(sys.argv[1])
 for i in range(int(sys.argv[3])):
     storage.write("todo", {"id": f"{sys.argv[2]}-{i}"})
     if i % 2:
@@ -543,7 +543,7 @@ for i in range(int(sys.argv[3])):
 """
 
 
-class TestDirectoryBasedStorageIndex:
+class TestLocalDirectoryStorageIndex:
     def test_write_appends_id_to_index(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         dir_storage.write("todo", {"id": "2"})

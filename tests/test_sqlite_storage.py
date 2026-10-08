@@ -2,7 +2,7 @@
 
 import pytest
 
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures

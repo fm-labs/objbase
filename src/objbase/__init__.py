@@ -5,18 +5,18 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage, AsyncFileBasedStorage
-from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
-from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
-from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
+from objbase.asyncio.storage.local import AsyncLocalDirectoryStorage, AsyncLocalFileStorage
+from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
+from objbase.asyncio.storage.redis import AsyncRedisStorage
+from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
 from objbase.errors import InventoryError, ItemNotFoundError
 from objbase.interface import AsyncStorage, Item, Storage
 from objbase.inventory import Inventory
-from objbase.storage.file_storage import DirectoryBasedStorage, FileBasedStorage
-from objbase.storage.inmemory_storage import InMemoryStorage
-from objbase.storage.mongodb_storage import MongoDBStorage
-from objbase.storage.redis_storage import RedisStorage
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.inmemory import InMemoryStorage
+from objbase.storage.local import LocalDirectoryStorage, LocalFileStorage
+from objbase.storage.mongodb import MongoDBStorage
+from objbase.storage.redis import RedisStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 if TYPE_CHECKING:
     # Lets type checkers see the real classes; at runtime they are loaded lazily by __getattr__.
@@ -28,16 +28,16 @@ except PackageNotFoundError:  # running from a source tree without installation
     __version__ = "0.0.0"
 
 __all__ = [
-    "AsyncDirectoryBasedStorage",
-    "AsyncFileBasedStorage",
+    "AsyncLocalDirectoryStorage",
+    "AsyncLocalFileStorage",
     "AsyncInventory",
     "AsyncStorage",
     "AsyncMongoDBStorage",
     "AsyncPydanticInventory",
     "AsyncRedisStorage",
     "AsyncSQLiteStorage",
-    "DirectoryBasedStorage",
-    "FileBasedStorage",
+    "LocalDirectoryStorage",
+    "LocalFileStorage",
     "InMemoryStorage",
     "Inventory",
     "InventoryError",

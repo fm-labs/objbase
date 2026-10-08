@@ -1,7 +1,7 @@
 import pydantic
 
 from objbase.pydantic import PydanticInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 class Todo(pydantic.BaseModel):

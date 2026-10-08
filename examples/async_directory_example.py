@@ -4,13 +4,13 @@ import asyncio
 import os
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage
+from objbase.asyncio.storage.local import AsyncLocalDirectoryStorage
 
 
 async def main() -> None:
     base_dir = os.getenv("INVENTORY_DIR", "data")
     os.makedirs(base_dir, exist_ok=True)  # the base directory must exist
-    storage = AsyncDirectoryBasedStorage(base_dir=base_dir)
+    storage = AsyncLocalDirectoryStorage(base_dir=base_dir)
     todos_inventory = AsyncInventory(item_type="todo", storage=storage)
 
     # Create some to-do items concurrently; the adapter's file locks keep the index consistent

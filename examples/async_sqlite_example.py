@@ -4,7 +4,7 @@ import asyncio
 import os
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
+from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
 
 
 async def main() -> None:

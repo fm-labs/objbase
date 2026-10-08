@@ -7,8 +7,8 @@ import threading
 import pytest
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures

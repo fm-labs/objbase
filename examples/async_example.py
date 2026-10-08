@@ -1,7 +1,7 @@
 import asyncio
 
 from objbase.asyncio.inventory import AsyncInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.inmemory import InMemoryStorage
 
 
 async def main():

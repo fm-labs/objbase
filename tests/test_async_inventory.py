@@ -6,8 +6,8 @@ import pytest
 from objbase.asyncio.inventory import AsyncInventory
 from objbase.errors import InventoryError, ItemNotFoundError
 from objbase.pydantic import AsyncPydanticInventory
-from objbase.storage.inmemory_storage import InMemoryStorage
-from objbase.storage.sqlite_storage import SQLiteStorage
+from objbase.storage.inmemory import InMemoryStorage
+from objbase.storage.sqlite import SQLiteStorage
 
 
 @pytest.fixture()
