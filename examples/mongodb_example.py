@@ -5,12 +5,12 @@ import os
 import pymongo
 
 from objbase.interface import Item
-from objbase.inventory import Inventory
+from objbase.collection import Collection
 from objbase.storage.mongodb import MongoDBStorage
 
 client: pymongo.MongoClient[Item] = pymongo.MongoClient(os.getenv("MONGODB_URI", "mongodb://localhost:27017"))
 storage = MongoDBStorage(mongo_client=client)
-todos_inventory = Inventory(item_type="todo", storage=storage)
+todos_inventory = Collection(item_type="todo", storage=storage)
 
 # Create some to-do items
 todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})

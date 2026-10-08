@@ -14,12 +14,12 @@ def test_all_names_are_importable():
 
 
 def test_top_level_names_are_the_submodule_objects():
-    from objbase.inventory import Inventory
-    from objbase.pydantic import AsyncPydanticInventory, PydanticInventory
+    from objbase.collection import Collection
+    from objbase.pydantic import AsyncPydanticCollection, PydanticCollection
 
-    assert objbase.Inventory is Inventory
-    assert objbase.PydanticInventory is PydanticInventory
-    assert objbase.AsyncPydanticInventory is AsyncPydanticInventory
+    assert objbase.Collection is Collection
+    assert objbase.PydanticCollection is PydanticCollection
+    assert objbase.AsyncPydanticCollection is AsyncPydanticCollection
 
 
 def test_version_is_set():
@@ -38,10 +38,10 @@ def test_import_works_without_optional_dependencies():
         "for m in ('redis', 'redis.asyncio', 'pymongo', 'pydantic'):\n"
         "    sys.modules[m] = None\n"
         "import objbase\n"
-        "inv = objbase.Inventory('todo', objbase.InMemoryStorage())\n"
+        "inv = objbase.Collection('todo', objbase.InMemoryStorage())\n"
         "inv.save({'id': '1'})\n"
         "assert inv.get('1') == {'id': '1'}\n"
-        "for name in ('PydanticInventory', 'AsyncPydanticInventory'):\n"
+        "for name in ('PydanticCollection', 'AsyncPydanticCollection'):\n"
         "    try:\n"
         "        getattr(objbase, name)\n"
         "    except ImportError:\n"

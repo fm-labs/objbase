@@ -3,7 +3,7 @@
 import asyncio
 import os
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
 
 
@@ -11,7 +11,7 @@ async def main() -> None:
     db_path = os.getenv("SQLITE_DB_PATH", os.path.join("data", "todos.db"))
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)  # sqlite3 doesn't create missing directories
     storage = AsyncSQLiteStorage(db_path=db_path)
-    todos_inventory = AsyncInventory(item_type="todo", storage=storage)
+    todos_inventory = AsyncCollection(item_type="todo", storage=storage)
 
     # Create some to-do items
     await todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})

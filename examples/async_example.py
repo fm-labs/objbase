@@ -1,12 +1,12 @@
 import asyncio
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.storage.inmemory import InMemoryStorage
 
 
 async def main():
     # Replace with AsyncRedisStorage(redis.asyncio.Redis(...)) for real persistence
-    todos_inventory = AsyncInventory(item_type="todo", storage=InMemoryStorage())
+    todos_inventory = AsyncCollection(item_type="todo", storage=InMemoryStorage())
 
     # Create a new to-do item
     created_todo = await todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})

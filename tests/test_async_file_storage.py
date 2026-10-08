@@ -6,7 +6,7 @@ import threading
 
 import pytest
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.asyncio.storage.local import AsyncLocalDirectoryStorage, AsyncLocalFileStorage
 from objbase.storage.local import LocalDirectoryStorage, LocalFileStorage
 
@@ -129,7 +129,7 @@ class TestAsyncFileStorageBehaviour:
         assert len(await storage.aitems("todo")) == 30
 
     async def test_works_with_async_inventory(self, storage):
-        todos = AsyncInventory(item_type="todo", storage=storage)
+        todos = AsyncCollection(item_type="todo", storage=storage)
         await todos.save({"id": "1", "done": False})
         assert await todos.patch("1", {"done": True}) == {"id": "1", "done": True}
 

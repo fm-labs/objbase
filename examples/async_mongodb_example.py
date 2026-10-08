@@ -5,7 +5,7 @@ import os
 
 import pymongo
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
 from objbase.interface import Item
 
@@ -15,7 +15,7 @@ async def main() -> None:
         os.getenv("MONGODB_URI", "mongodb://localhost:27017")
     )
     storage = AsyncMongoDBStorage(mongo_client=client)
-    todos_inventory = AsyncInventory(item_type="todo", storage=storage)
+    todos_inventory = AsyncCollection(item_type="todo", storage=storage)
 
     # Create some to-do items
     await todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})

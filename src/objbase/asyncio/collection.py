@@ -1,18 +1,18 @@
-from objbase.errors import InventoryError, ItemNotFoundError
+from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.interface import AsyncStorage, Item
-from objbase.inventory import check_patch_data, require_item_id, require_read_back
+from objbase.collection import check_patch_data, require_item_id, require_read_back
 
 
-class AsyncInventory:
-    """Async counterpart of ``Inventory``, backed by an ``AsyncStorage``.
+class AsyncCollection:
+    """Async counterpart of ``Collection``, backed by an ``AsyncStorage``.
 
-    Same methods and behaviour as ``Inventory``, but every method is a coroutine.
+    Same methods and behaviour as ``Collection``, but every method is a coroutine.
     """
 
     def __init__(self, item_type: str, storage: AsyncStorage):
         if not isinstance(storage, AsyncStorage):
             raise TypeError(
-                f"{type(storage).__name__} is not an AsyncStorage; use Inventory for sync storage adapters."
+                f"{type(storage).__name__} is not an AsyncStorage; use Collection for sync storage adapters."
             )
         self.storage = storage
         self.item_type = item_type
@@ -29,7 +29,7 @@ class AsyncInventory:
     async def save(self, item: Item) -> Item:
         _id = require_item_id(item)
         if not await self.storage.awrite(self.item_type, item):
-            raise InventoryError(f"Failed to save item '{_id}'.")
+            raise CollectionError(f"Failed to save item '{_id}'.")
         return require_read_back(await self.storage.aread(self.item_type, _id), self.item_type, _id)
 
     async def patch(self, id: str, data: Item) -> Item:
@@ -39,7 +39,7 @@ class AsyncInventory:
             raise ItemNotFoundError(self.item_type, id)
         item.update(data)
         if not await self.storage.awrite(self.item_type, item):
-            raise InventoryError(f"Failed to patch item '{id}'.")
+            raise CollectionError(f"Failed to patch item '{id}'.")
         return require_read_back(await self.storage.aread(self.item_type, id), self.item_type, id)
 
     async def delete(self, id: str) -> bool:

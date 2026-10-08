@@ -12,7 +12,7 @@ __No thrills__ - **just a simple key-value store for serializable Python objects
 - Basic CRUD operations: `save`, `get`, `filter`, `keys`, `patch`, `delete`
 - Multiple storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
 - Optional Pydantic model validation with `PydanticInventory` / `AsyncPydanticInventory`
-- Async support via `AsyncInventory` with async storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
+- Async support via `AsyncCollection` with async storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
 - Easy FastAPI integration with dependency injection
 - Fully typed (ships `py.typed`), checked with `mypy --strict`
 
@@ -38,13 +38,13 @@ uv add "objbase[redis]"
 
 ## Quick Start
 
-Every item must have an `"id"` field. Use `Inventory` with any storage adapter:
+Every item must have an `"id"` field. Use `Collection` with any storage adapter:
 
 ```python
-from objbase import Inventory, InMemoryStorage
+from objbase import Collection, InMemoryStorage
 
 storage = InMemoryStorage()
-todos = Inventory(item_type="todo", storage=storage)
+todos = Collection(item_type="todo", storage=storage)
 
 todos.save({"id": "1", "title": "Buy milk", "done": False})
 todos.save({"id": "2", "title": "Walk dog", "done": False})
@@ -56,7 +56,7 @@ todos.patch("1", {"done": True})  # → {"id": "1", ..., "done": True}
 todos.delete("1")  # → True
 ```
 
-Swapping the backend requires only changing the `storage` argument — the `Inventory`
+Swapping the backend requires only changing the `storage` argument — the `Collection`
 API stays identical.
 
 All public classes can be imported from the top-level `objbase` package, as above,
@@ -65,11 +65,11 @@ or from their submodules as in the examples below:
 | Module | Contents |
 |---|---|
 | `objbase.interface` | `Storage`, `AsyncStorage` protocols and the `Item` type |
-| `objbase.inventory` | `Inventory` |
+| `objbase.inventory` | `Collection` |
 | `objbase.errors` | `InventoryError`, `ItemNotFoundError` |
 | `objbase.pydantic` | `PydanticInventory`, `AsyncPydanticInventory` (needs `objbase[pydantic]`) |
 | `objbase.storage.{inmemory,file,sqlite,redis,mongodb}_storage` | Sync storage adapters |
-| `objbase.asyncio.inventory` | `AsyncInventory` |
+| `objbase.asyncio.inventory` | `AsyncCollection` |
 | `objbase.asyncio.storage.{file,sqlite,redis,mongodb}_storage` | Async storage adapters |
 
 `import objbase` works without Pydantic installed; `PydanticInventory` and
@@ -244,7 +244,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017")
 storage = MongoDBStorage(mongo_client=client)
 ```
 
-Items are stored in the `inventory` database, one collection per `item_type`.
+Items are stored in the `collection.py` database, one collection per `item_type`.
 The MongoDB `_id` field is stripped from results automatically.
 Pass a pre-configured `pymongo.MongoClient`. Requires `pymongo`. `AsyncMongoDBStorage`
 takes a `pymongo.AsyncMongoClient` and uses the same layout, so sync and async adapters
@@ -321,7 +321,7 @@ item = await todos.get("1")  # Todo | None
 
 ## Async Usage
 
-`AsyncInventory` has the same methods and behaviour as `Inventory`, but every
+`AsyncCollection` has the same methods and behaviour as `Collection`, but every
 method is a coroutine. It works with any `AsyncStorage` adapter:
 `AsyncLocalFileStorage`, `AsyncLocalDirectoryStorage`, `AsyncSQLiteStorage`,
 `AsyncRedisStorage`, `AsyncMongoDBStorage`,
@@ -329,11 +329,11 @@ or `InMemoryStorage` for tests.
 
 ```python
 import redis.asyncio
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.asyncio.storage.redis import AsyncRedisStorage
 
 client = redis.asyncio.Redis(host="localhost", port=6379)
-todos = AsyncInventory(item_type="todo", storage=AsyncRedisStorage(client))
+todos = AsyncCollection(item_type="todo", storage=AsyncRedisStorage(client))
 
 await todos.save({"id": "1", "title": "Buy milk", "done": False})
 await todos.get("1")  # → {"id": "1", "title": "Buy milk", "done": False}
@@ -345,7 +345,7 @@ await todos.delete("1")  # → True
 
 For Pydantic models, use `AsyncPydanticInventory` (see [Pydantic Models: Async](#async)).
 
-Passing a sync-only adapter (e.g. `SQLiteStorage`) to `AsyncInventory`
+Passing a sync-only adapter (e.g. `SQLiteStorage`) to `AsyncCollection`
 raises `TypeError`; use its async counterpart (e.g. `AsyncSQLiteStorage`) instead.
 The adapter methods (`akeys`, `aitems`, `aread`, `awrite`, `adelete`)
 can also be called directly on the storage.
@@ -358,9 +358,9 @@ Runnable scripts are in [`examples/`](examples/):
 
 | Script | Shows |
 |---|---|
-| `dict_example.py` | `Inventory` with plain dicts (in-memory) |
+| `dict_example.py` | `Collection` with plain dicts (in-memory) |
 | `pydantic_example.py` | `PydanticInventory` (in-memory) |
-| `async_example.py` | `AsyncInventory` (in-memory) |
+| `async_example.py` | `AsyncCollection` (in-memory) |
 | `async_pydantic_example.py` | `AsyncPydanticInventory` (in-memory) |
 | `async_file_example.py` | `AsyncLocalFileStorage` |
 | `async_directory_example.py` | `AsyncLocalDirectoryStorage`, incl. concurrent saves and `arebuild_index` |
@@ -404,45 +404,45 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 ```
 
-### 2. Inject `AsyncInventory` with `Depends`
+### 2. Inject `AsyncCollection` with `Depends`
 
-Wrap the `AsyncInventory` construction in a dependency function so routes stay clean
+Wrap the `AsyncCollection` construction in a dependency function so routes stay clean
 and the storage adapter is easy to swap out (e.g. in tests).
 
 ```python
 from fastapi import Depends, HTTPException, Request
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.errors import ItemNotFoundError
 
 
-def get_todos(request: Request) -> AsyncInventory:
-    return AsyncInventory(item_type="todo", storage=request.app.state.storage)
+def get_todos(request: Request) -> AsyncCollection:
+  return AsyncCollection(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")
-async def list_todos(todos: AsyncInventory = Depends(get_todos)):
-    return await todos.filter()
+async def list_todos(todos: AsyncCollection = Depends(get_todos)):
+  return await todos.filter()
 
 
 @app.get("/todos/{todo_id}")
-async def get_todo(todo_id: str, todos: AsyncInventory = Depends(get_todos)):
-    item = await todos.get(todo_id)
-    if item is None:
-        raise HTTPException(status_code=404)
-    return item
+async def get_todo(todo_id: str, todos: AsyncCollection = Depends(get_todos)):
+  item = await todos.get(todo_id)
+  if item is None:
+    raise HTTPException(status_code=404)
+  return item
 
 
 @app.post("/todos")
-async def create_todo(item: dict, todos: AsyncInventory = Depends(get_todos)):
-    return await todos.save(item)
+async def create_todo(item: dict, todos: AsyncCollection = Depends(get_todos)):
+  return await todos.save(item)
 
 
 @app.patch("/todos/{todo_id}")
-async def update_todo(todo_id: str, data: dict, todos: AsyncInventory = Depends(get_todos)):
-    try:
-        return await todos.patch(todo_id, data)
-    except ItemNotFoundError:
-        raise HTTPException(status_code=404)
+async def update_todo(todo_id: str, data: dict, todos: AsyncCollection = Depends(get_todos)):
+  try:
+    return await todos.patch(todo_id, data)
+  except ItemNotFoundError:
+    raise HTTPException(status_code=404)
 ```
 
 ### 3. Sync routes with SQLite
@@ -454,7 +454,7 @@ automatically, keeping the event loop unblocked.
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, Request
-from objbase.inventory import Inventory
+from objbase.collection import Collection
 from objbase.storage.sqlite import SQLiteStorage
 
 
@@ -467,12 +467,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-def get_todos(request: Request) -> Inventory:
-  return Inventory(item_type="todo", storage=request.app.state.storage)
+def get_todos(request: Request) -> Collection:
+  return Collection(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")  # sync — runs in threadpool
-def list_todos(todos: Inventory = Depends(get_todos)):
+def list_todos(todos: Collection = Depends(get_todos)):
   return todos.items()
 ```
 
@@ -483,7 +483,7 @@ Swap the storage backend for the entire test run without touching any route code
 for Redis. Create it once so data persists across requests:
 
 ```python
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.storage.inmemory import InMemoryStorage
 from fastapi.testclient import TestClient
 
@@ -491,7 +491,7 @@ test_storage = InMemoryStorage()
 
 
 def override_todos():
-    return AsyncInventory(item_type="todo", storage=test_storage)
+  return AsyncCollection(item_type="todo", storage=test_storage)
 
 
 app.dependency_overrides[get_todos] = override_todos
@@ -504,8 +504,8 @@ client = TestClient(app)
 |---|---|
 | Single-process, low traffic | `SQLiteStorage` — zero deps, ACID, simple |
 | Multi-worker / multi-process | `RedisStorage` or `MongoDBStorage` |
-| Async routes | `AsyncInventory` + `AsyncRedisStorage` or `AsyncMongoDBStorage` — non-blocking, fits the event loop |
-| Async routes, single process, no infrastructure | `AsyncInventory` + `AsyncSQLiteStorage` — zero deps, runs in a worker thread |
+| Async routes | `AsyncCollection` + `AsyncRedisStorage` or `AsyncMongoDBStorage` — non-blocking, fits the event loop |
+| Async routes, single process, no infrastructure | `AsyncCollection` + `AsyncSQLiteStorage` — zero deps, runs in a worker thread |
 | Testing / local dev | `InMemoryStorage` — fast, no infrastructure needed |
 
 ---
@@ -622,7 +622,7 @@ The package ships a `py.typed` marker, so mypy, Pyright and IDEs use its type
 hints. The library itself is checked with `mypy --strict`.
 
 - Items are typed as `objbase.Item`, an alias for `dict[str, Any]`.
-- `Inventory` and `AsyncInventory` accept and return `Item`; `get` returns `Item | None`.
+- `Collection` and `AsyncCollection` accept and return `Item`; `get` returns `Item | None`.
 - `PydanticInventory` and `AsyncPydanticInventory` are generic over their model class, which is inferred from
   `model_class` (see [Pydantic Models](#pydantic-models)).
 - Storage adapters accept any structurally compatible client. For example,

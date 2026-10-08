@@ -1,11 +1,11 @@
-"""Tests for the AsyncInventory and AsyncPydanticInventory APIs."""
+"""Tests for the AsyncCollection and AsyncPydanticCollection APIs."""
 
 import pydantic
 import pytest
 
-from objbase.asyncio.inventory import AsyncInventory
-from objbase.errors import InventoryError, ItemNotFoundError
-from objbase.pydantic import AsyncPydanticInventory
+from objbase.asyncio.collection import AsyncCollection
+from objbase.errors import CollectionError, ItemNotFoundError
+from objbase.pydantic import AsyncPydanticCollection
 from objbase.storage.inmemory import InMemoryStorage
 from objbase.storage.sqlite import SQLiteStorage
 
@@ -16,8 +16,8 @@ def storage() -> InMemoryStorage:
 
 
 @pytest.fixture()
-def todos(storage) -> AsyncInventory:
-    return AsyncInventory(item_type="todo", storage=storage)
+def todos(storage) -> AsyncCollection:
+    return AsyncCollection(item_type="todo", storage=storage)
 
 
 class FailingStorage(InMemoryStorage):
@@ -25,13 +25,13 @@ class FailingStorage(InMemoryStorage):
         return False
 
 
-class TestAsyncInventoryInit:
+class TestAsyncCollectionInit:
     def test_rejects_sync_only_storage(self, tmp_path):
         with pytest.raises(TypeError, match="not an AsyncStorage"):
-            AsyncInventory("todo", SQLiteStorage(str(tmp_path / "x.db")))  # type: ignore[arg-type]
+            AsyncCollection("todo", SQLiteStorage(str(tmp_path / "x.db")))  # type: ignore[arg-type]
 
 
-class TestAsyncInventorySave:
+class TestAsyncCollectionSave:
     async def test_save_returns_stored_item(self, todos):
         assert await todos.save({"id": "1", "title": "Buy milk"}) == {"id": "1", "title": "Buy milk"}
 
@@ -45,11 +45,11 @@ class TestAsyncInventorySave:
             await todos.save(item)
 
     async def test_save_raises_when_storage_write_fails(self):
-        with pytest.raises(InventoryError, match="Failed to save"):
-            await AsyncInventory("todo", FailingStorage()).save({"id": "1"})
+        with pytest.raises(CollectionError, match="Failed to save"):
+            await AsyncCollection("todo", FailingStorage()).save({"id": "1"})
 
 
-class TestAsyncInventoryKeys:
+class TestAsyncCollectionKeys:
     async def test_keys_returns_ids(self, todos):
         await todos.save({"id": "1"})
         await todos.save({"id": "2"})
@@ -60,7 +60,7 @@ class TestAsyncInventoryKeys:
 
     async def test_keys_only_for_own_item_type(self, todos, storage):
         await todos.save({"id": "1"})
-        await AsyncInventory("note", storage).save({"id": "2"})
+        await AsyncCollection("note", storage).save({"id": "2"})
         assert await todos.keys() == ["1"]
 
     async def test_keys_reflects_delete(self, todos):
@@ -70,7 +70,7 @@ class TestAsyncInventoryKeys:
         assert await todos.keys() == ["2"]
 
 
-class TestAsyncInventoryGetFilter:
+class TestAsyncCollectionGetFilter:
     async def test_get_returns_item(self, todos):
         await todos.save({"id": "1", "title": "a"})
         assert await todos.get("1") == {"id": "1", "title": "a"}
@@ -87,7 +87,7 @@ class TestAsyncInventoryGetFilter:
         assert await todos.filter() == []
 
 
-class TestAsyncInventoryPatch:
+class TestAsyncCollectionPatch:
     async def test_patch_merges_fields(self, todos):
         await todos.save({"id": "1", "title": "a", "done": False})
         assert await todos.patch("1", {"done": True}) == {"id": "1", "title": "a", "done": True}
@@ -112,11 +112,11 @@ class TestAsyncInventoryPatch:
     async def test_patch_raises_when_storage_write_fails(self):
         storage = FailingStorage()
         storage.write("todo", {"id": "1"})
-        with pytest.raises(InventoryError, match="Failed to patch"):
-            await AsyncInventory("todo", storage).patch("1", {"done": True})
+        with pytest.raises(CollectionError, match="Failed to patch"):
+            await AsyncCollection("todo", storage).patch("1", {"done": True})
 
 
-class TestAsyncInventoryDelete:
+class TestAsyncCollectionDelete:
     async def test_delete_existing(self, todos):
         await todos.save({"id": "1"})
         assert await todos.delete("1") is True
@@ -127,7 +127,7 @@ class TestAsyncInventoryDelete:
 
 
 # ===========================================================================
-# AsyncPydanticInventory
+# AsyncPydanticCollection
 # ===========================================================================
 
 
@@ -138,18 +138,18 @@ class Todo(pydantic.BaseModel):
 
 
 @pytest.fixture()
-def model_todos(storage) -> AsyncPydanticInventory[Todo]:
-    return AsyncPydanticInventory(item_type="todo", storage=storage, model_class=Todo)
+def model_todos(storage) -> AsyncPydanticCollection[Todo]:
+    return AsyncPydanticCollection(item_type="todo", storage=storage, model_class=Todo)
 
 
-class TestAsyncPydanticInventory:
+class TestAsyncPydanticCollection:
     def test_exposes_item_type_and_storage(self, model_todos, storage):
         assert model_todos.item_type == "todo"
         assert model_todos.storage is storage
 
     def test_rejects_sync_only_storage(self, tmp_path):
         with pytest.raises(TypeError, match="not an AsyncStorage"):
-            AsyncPydanticInventory("todo", SQLiteStorage(str(tmp_path / "x.db")), Todo)  # type: ignore[arg-type]
+            AsyncPydanticCollection("todo", SQLiteStorage(str(tmp_path / "x.db")), Todo)  # type: ignore[arg-type]
 
     async def test_save_returns_model(self, model_todos):
         result = await model_todos.save(Todo(id="1", title="Buy milk"))

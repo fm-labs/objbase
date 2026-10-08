@@ -1,11 +1,11 @@
-"""Tests for the Inventory and PydanticInventory APIs."""
+"""Tests for the Collection and PydanticCollection APIs."""
 
 import pydantic
 import pytest
 
-from objbase.errors import InventoryError, ItemNotFoundError
-from objbase.inventory import Inventory
-from objbase.pydantic import PydanticInventory
+from objbase.errors import CollectionError, ItemNotFoundError
+from objbase.collection import Collection
+from objbase.pydantic import PydanticCollection
 from objbase.storage.inmemory import InMemoryStorage
 
 
@@ -15,8 +15,8 @@ def storage() -> InMemoryStorage:
 
 
 @pytest.fixture()
-def todos(storage) -> Inventory:
-    return Inventory(item_type="todo", storage=storage)
+def todos(storage) -> Collection:
+    return Collection(item_type="todo", storage=storage)
 
 
 class FailingStorage(InMemoryStorage):
@@ -25,11 +25,11 @@ class FailingStorage(InMemoryStorage):
 
 
 # ===========================================================================
-# Inventory
+# Collection
 # ===========================================================================
 
 
-class TestInventorySave:
+class TestCollectionSave:
     def test_save_returns_stored_item(self, todos):
         assert todos.save({"id": "1", "title": "Buy milk"}) == {"id": "1", "title": "Buy milk"}
 
@@ -43,11 +43,11 @@ class TestInventorySave:
             todos.save(item)
 
     def test_save_raises_when_storage_write_fails(self):
-        with pytest.raises(InventoryError, match="Failed to save"):
-            Inventory("todo", FailingStorage()).save({"id": "1"})
+        with pytest.raises(CollectionError, match="Failed to save"):
+            Collection("todo", FailingStorage()).save({"id": "1"})
 
 
-class TestInventoryKeys:
+class TestCollectionKeys:
     def test_keys_returns_ids(self, todos):
         todos.save({"id": "1"})
         todos.save({"id": "2"})
@@ -58,7 +58,7 @@ class TestInventoryKeys:
 
     def test_keys_only_for_own_item_type(self, todos, storage):
         todos.save({"id": "1"})
-        Inventory("note", storage).save({"id": "2"})
+        Collection("note", storage).save({"id": "2"})
         assert todos.keys() == ["1"]
 
     def test_keys_reflects_delete(self, todos):
@@ -68,7 +68,7 @@ class TestInventoryKeys:
         assert todos.keys() == ["2"]
 
 
-class TestInventoryGetFilter:
+class TestCollectionGetFilter:
     def test_get_returns_item(self, todos):
         todos.save({"id": "1", "title": "a"})
         assert todos.get("1") == {"id": "1", "title": "a"}
@@ -85,7 +85,7 @@ class TestInventoryGetFilter:
         assert todos.items() == []
 
 
-class TestInventoryPatch:
+class TestCollectionPatch:
     def test_patch_merges_fields(self, todos):
         todos.save({"id": "1", "title": "a", "done": False})
         assert todos.patch("1", {"done": True}) == {"id": "1", "title": "a", "done": True}
@@ -119,11 +119,11 @@ class TestInventoryPatch:
     def test_patch_raises_when_storage_write_fails(self):
         storage = FailingStorage()
         InMemoryStorage.write(storage, "todo", {"id": "1"})
-        with pytest.raises(InventoryError, match="Failed to patch"):
-            Inventory("todo", storage).patch("1", {"done": True})
+        with pytest.raises(CollectionError, match="Failed to patch"):
+            Collection("todo", storage).patch("1", {"done": True})
 
 
-class TestInventoryDelete:
+class TestCollectionDelete:
     def test_delete_existing(self, todos):
         todos.save({"id": "1"})
         assert todos.delete("1") is True
@@ -134,7 +134,7 @@ class TestInventoryDelete:
 
 
 # ===========================================================================
-# PydanticInventory
+# PydanticCollection
 # ===========================================================================
 
 
@@ -145,11 +145,11 @@ class Todo(pydantic.BaseModel):
 
 
 @pytest.fixture()
-def model_todos(storage) -> PydanticInventory[Todo]:
-    return PydanticInventory(item_type="todo", storage=storage, model_class=Todo)
+def model_todos(storage) -> PydanticCollection[Todo]:
+    return PydanticCollection(item_type="todo", storage=storage, model_class=Todo)
 
 
-class TestPydanticInventory:
+class TestPydanticCollection:
     def test_exposes_item_type_and_storage(self, model_todos, storage):
         assert model_todos.item_type == "todo"
         assert model_todos.storage is storage

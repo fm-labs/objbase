@@ -1,9 +1,9 @@
 import pydantic
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.errors import ItemNotFoundError
 from objbase.interface import AsyncStorage, Item, Storage
-from objbase.inventory import Inventory, check_patch_data
+from objbase.collection import Collection, check_patch_data
 
 
 def _dump(model: pydantic.BaseModel) -> Item:
@@ -35,12 +35,12 @@ def _patched[M: pydantic.BaseModel](
     return _validated(model_class, {**current, **patch})
 
 
-class PydanticInventory[M: pydantic.BaseModel]:
-    """Inventory that validates items against a Pydantic model.
+class PydanticCollection[M: pydantic.BaseModel]:
+    """Collection that validates items against a Pydantic model.
 
-    Wraps an ``Inventory``: items are stored as plain dicts and returned as
+    Wraps an ``Collection``: items are stored as plain dicts and returned as
     ``model_class`` instances. The model type is inferred from ``model_class``,
-    so ``PydanticInventory("todo", storage, Todo).get("1")`` is typed ``Todo | None``.
+    so ``PydanticCollection("todo", storage, Todo).get("1")`` is typed ``Todo | None``.
 
     ``save`` and ``patch`` validate the complete item before writing it, so data
     that fails validation raises ``pydantic.ValidationError`` and is never stored.
@@ -48,7 +48,7 @@ class PydanticInventory[M: pydantic.BaseModel]:
 
     def __init__(self, item_type: str, storage: Storage, model_class: type[M]):
         self.model_class = model_class
-        self.inventory = Inventory(item_type, storage)
+        self.inventory = Collection(item_type, storage)
 
     @property
     def item_type(self) -> str:
@@ -81,15 +81,15 @@ class PydanticInventory[M: pydantic.BaseModel]:
         return self.inventory.delete(id)
 
 
-class AsyncPydanticInventory[M: pydantic.BaseModel]:
-    """Async counterpart of ``PydanticInventory``, backed by an ``AsyncStorage``.
+class AsyncPydanticCollection[M: pydantic.BaseModel]:
+    """Async counterpart of ``PydanticCollection``, backed by an ``AsyncStorage``.
 
-    Same methods and behaviour as ``PydanticInventory``, but every method is a coroutine.
+    Same methods and behaviour as ``PydanticCollection``, but every method is a coroutine.
     """
 
     def __init__(self, item_type: str, storage: AsyncStorage, model_class: type[M]):
         self.model_class = model_class
-        self.inventory = AsyncInventory(item_type, storage)
+        self.inventory = AsyncCollection(item_type, storage)
 
     @property
     def item_type(self) -> str:

@@ -1,8 +1,8 @@
-class InventoryError(Exception):
+class CollectionError(Exception):
     """Base class for all objbase errors."""
 
 
-class ItemNotFoundError(InventoryError, LookupError):
+class ItemNotFoundError(CollectionError, LookupError):
     """Raised when an operation requires an item that does not exist."""
 
     def __init__(self, item_type: str, id: str):

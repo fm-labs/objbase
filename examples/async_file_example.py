@@ -3,7 +3,7 @@
 import asyncio
 import os
 
-from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.collection import AsyncCollection
 from objbase.asyncio.storage.local import AsyncLocalFileStorage
 
 
@@ -11,7 +11,7 @@ async def main() -> None:
     base_dir = os.getenv("INVENTORY_DIR", "data")
     os.makedirs(base_dir, exist_ok=True)  # the base directory must exist
     storage = AsyncLocalFileStorage(base_dir=base_dir)
-    todos_inventory = AsyncInventory(item_type="todo", storage=storage)
+    todos_inventory = AsyncCollection(item_type="todo", storage=storage)
 
     # Create some to-do items
     await todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})

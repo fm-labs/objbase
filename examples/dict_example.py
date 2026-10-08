@@ -1,9 +1,9 @@
 # Simple To-do List Example
-from objbase.inventory import Inventory
+from objbase.collection import Collection
 from objbase.storage.inmemory import InMemoryStorage
 
 # Replace with actual storage instance
-todos_inventory = Inventory(item_type="todo", storage=InMemoryStorage())
+todos_inventory = Collection(item_type="todo", storage=InMemoryStorage())
 
 # Create a new to-do item
 new_todo = {"id": "1", "name": "Buy groceries", "status": "pending"}

@@ -1,6 +1,6 @@
 from typing import Any
 
-from objbase.errors import InventoryError, ItemNotFoundError
+from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.interface import Item, Storage
 
 
@@ -21,11 +21,12 @@ def check_patch_data(id: str, data: Item) -> None:
 def require_read_back(item: Item | None, item_type: str, id: str) -> Item:
     """Return an item read back after a successful write, raising if it vanished."""
     if item is None:
-        raise InventoryError(f"Item '{id}' of type '{item_type}' could not be read back after writing.")
+        raise CollectionError(f"Item '{id}' of type '{item_type}' could not be read back after writing.")
     return item
 
 
-class Inventory:
+class Collection:
+    
     def __init__(self, item_type: str, storage: Storage):
         self.storage = storage
         self.item_type = item_type
@@ -42,7 +43,7 @@ class Inventory:
     def save(self, item: Item) -> Item:
         _id = require_item_id(item)
         if not self.storage.write(self.item_type, item):
-            raise InventoryError(f"Failed to save item '{_id}'.")
+            raise CollectionError(f"Failed to save item '{_id}'.")
         return require_read_back(self.storage.read(self.item_type, _id), self.item_type, _id)
 
     def patch(self, id: str, data: Item) -> Item:
@@ -52,7 +53,7 @@ class Inventory:
             raise ItemNotFoundError(self.item_type, id)
         item.update(data)
         if not self.storage.write(self.item_type, item):
-            raise InventoryError(f"Failed to patch item '{id}'.")
+            raise CollectionError(f"Failed to patch item '{id}'.")
         return require_read_back(self.storage.read(self.item_type, id), self.item_type, id)
 
     def delete(self, id: str) -> bool:
