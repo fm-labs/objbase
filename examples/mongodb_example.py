@@ -4,8 +4,8 @@ import os
 
 import pymongo
 
-from objbase.interface import Item
 from objbase.collection import Collection
+from objbase.interface import Item
 from objbase.storage.mongodb import MongoDBStorage
 
 client: pymongo.MongoClient[Item] = pymongo.MongoClient(os.getenv("MONGODB_URI", "mongodb://localhost:27017"))

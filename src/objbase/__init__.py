@@ -9,9 +9,9 @@ from objbase.asyncio.storage.local import AsyncLocalDirectoryStorage, AsyncLocal
 from objbase.asyncio.storage.mongodb import AsyncMongoDBStorage
 from objbase.asyncio.storage.redis import AsyncRedisStorage
 from objbase.asyncio.storage.sqlite import AsyncSQLiteStorage
+from objbase.collection import Collection
 from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.interface import AsyncStorage, Item, Storage
-from objbase.collection import Collection
 from objbase.storage.inmemory import InMemoryStorage
 from objbase.storage.local import LocalDirectoryStorage, LocalFileStorage
 from objbase.storage.mongodb import MongoDBStorage

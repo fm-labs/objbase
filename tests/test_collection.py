@@ -3,8 +3,8 @@
 import pydantic
 import pytest
 
-from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.collection import Collection
+from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.pydantic import PydanticCollection
 from objbase.storage.inmemory import InMemoryStorage
 

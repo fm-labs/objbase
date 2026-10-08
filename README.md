@@ -416,33 +416,33 @@ from objbase.errors import ItemNotFoundError
 
 
 def get_todos(request: Request) -> AsyncCollection:
-  return AsyncCollection(item_type="todo", storage=request.app.state.storage)
+    return AsyncCollection(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")
 async def list_todos(todos: AsyncCollection = Depends(get_todos)):
-  return await todos.filter()
+    return await todos.filter()
 
 
 @app.get("/todos/{todo_id}")
 async def get_todo(todo_id: str, todos: AsyncCollection = Depends(get_todos)):
-  item = await todos.get(todo_id)
-  if item is None:
-    raise HTTPException(status_code=404)
-  return item
+    item = await todos.get(todo_id)
+    if item is None:
+        raise HTTPException(status_code=404)
+    return item
 
 
 @app.post("/todos")
 async def create_todo(item: dict, todos: AsyncCollection = Depends(get_todos)):
-  return await todos.save(item)
+    return await todos.save(item)
 
 
 @app.patch("/todos/{todo_id}")
 async def update_todo(todo_id: str, data: dict, todos: AsyncCollection = Depends(get_todos)):
-  try:
-    return await todos.patch(todo_id, data)
-  except ItemNotFoundError:
-    raise HTTPException(status_code=404)
+    try:
+        return await todos.patch(todo_id, data)
+    except ItemNotFoundError:
+        raise HTTPException(status_code=404)
 ```
 
 ### 3. Sync routes with SQLite
@@ -460,20 +460,20 @@ from objbase.storage.sqlite import SQLiteStorage
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-  app.state.storage = SQLiteStorage("app.db")
-  yield
+    app.state.storage = SQLiteStorage("app.db")
+    yield
 
 
 app = FastAPI(lifespan=lifespan)
 
 
 def get_todos(request: Request) -> Collection:
-  return Collection(item_type="todo", storage=request.app.state.storage)
+    return Collection(item_type="todo", storage=request.app.state.storage)
 
 
 @app.get("/todos")  # sync — runs in threadpool
 def list_todos(todos: Collection = Depends(get_todos)):
-  return todos.items()
+    return todos.items()
 ```
 
 ### 4. Override the dependency in tests
@@ -491,7 +491,7 @@ test_storage = InMemoryStorage()
 
 
 def override_todos():
-  return AsyncCollection(item_type="todo", storage=test_storage)
+    return AsyncCollection(item_type="todo", storage=test_storage)
 
 
 app.dependency_overrides[get_todos] = override_todos

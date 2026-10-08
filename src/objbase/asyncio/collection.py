@@ -1,6 +1,6 @@
+from objbase.collection import check_patch_data, require_item_id, require_read_back
 from objbase.errors import CollectionError, ItemNotFoundError
 from objbase.interface import AsyncStorage, Item
-from objbase.collection import check_patch_data, require_item_id, require_read_back
 
 
 class AsyncCollection:
