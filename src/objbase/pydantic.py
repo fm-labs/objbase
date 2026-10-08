@@ -103,7 +103,7 @@ class AsyncPydanticCollection[M: pydantic.BaseModel]:
         return await self.inventory.keys()
 
     async def filter(self) -> list[M]:
-        return [self.model_class.model_validate(item) for item in await self.inventory.filter()]
+        return [self.model_class.model_validate(item) for item in await self.inventory.items()]
 
     async def save(self, model: M) -> M:
         return self.model_class.model_validate(await self.inventory.save(_validated(self.model_class, model)))

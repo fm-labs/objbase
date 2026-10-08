@@ -20,7 +20,7 @@ async def main() -> None:
     # Create some to-do items
     await todos_inventory.save({"id": "1", "name": "Buy groceries", "status": "pending"})
     await todos_inventory.save({"id": "2", "name": "Walk the dog", "status": "pending"})
-    print("All To-dos:", await todos_inventory.filter())
+    print("All To-dos:", await todos_inventory.items())
 
     # Update a to-do item
     updated_todo = await todos_inventory.patch("1", {"status": "completed"})

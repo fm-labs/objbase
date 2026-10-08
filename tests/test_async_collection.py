@@ -78,13 +78,13 @@ class TestAsyncCollectionGetFilter:
     async def test_get_missing_returns_none(self, todos):
         assert await todos.get("nope") is None
 
-    async def test_filter_returns_all_items(self, todos):
+    async def test_items_returns_all_items(self, todos):
         await todos.save({"id": "1"})
         await todos.save({"id": "2"})
-        assert sorted(i["id"] for i in await todos.filter()) == ["1", "2"]
+        assert sorted(i["id"] for i in await todos.items()) == ["1", "2"]
 
-    async def test_filter_empty(self, todos):
-        assert await todos.filter() == []
+    async def test_items_empty(self, todos):
+        assert await todos.items() == []
 
 
 class TestAsyncCollectionPatch:
@@ -177,7 +177,7 @@ class TestAsyncPydanticCollection:
         with pytest.raises(pydantic.ValidationError):
             await model_todos.filter()
 
-    async def test_filter_returns_models(self, model_todos):
+    async def test_items_returns_models(self, model_todos):
         await model_todos.save(Todo(id="1", title="a"))
         await model_todos.save(Todo(id="2", title="b"))
         result = await model_todos.filter()

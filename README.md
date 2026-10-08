@@ -9,7 +9,7 @@ __No thrills__ - **just a simple key-value store for serializable Python objects
 
 ## What you get
 
-- Basic CRUD operations: `save`, `get`, `filter`, `keys`, `patch`, `delete`
+- Basic CRUD operations: `save`, `get`, `items`, `keys`, `patch`, `delete`
 - Multiple storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
 - Optional Pydantic model validation with `PydanticCollection` / `AsyncPydanticCollection`
 - Async support via `AsyncCollection` with async storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
@@ -65,12 +65,12 @@ or from their submodules as in the examples below:
 | Module | Contents |
 |---|---|
 | `objbase.interface` | `Storage`, `AsyncStorage` protocols and the `Item` type |
-| `objbase.inventory` | `Collection` |
+| `objbase.collection` | `Collection` |
 | `objbase.errors` | `CollectionError`, `ItemNotFoundError` |
 | `objbase.pydantic` | `PydanticCollection`, `AsyncPydanticCollection` (needs `objbase[pydantic]`) |
-| `objbase.storage.{inmemory,file,sqlite,redis,mongodb}_storage` | Sync storage adapters |
-| `objbase.asyncio.inventory` | `AsyncCollection` |
-| `objbase.asyncio.storage.{file,sqlite,redis,mongodb}_storage` | Async storage adapters |
+| `objbase.storage.{inmemory,local,sqlite,redis,mongodb}` | Sync storage adapters |
+| `objbase.asyncio.collection` | `AsyncCollection` |
+| `objbase.asyncio.storage.{local,sqlite,redis,mongodb}` | Async storage adapters |
 
 `import objbase` works without Pydantic installed; `PydanticCollection` and
 `AsyncPydanticCollection` are loaded on first access.
@@ -79,7 +79,7 @@ or from their submodules as in the examples below:
 
 All adapters follow the same contract (verified by a shared test suite):
 
-- `get` returns `None` for a missing item; `filter` and `keys` return `[]` for an empty type.
+- `get` returns `None` for a missing item; `items` and `keys` return `[]` for an empty type.
 - `save` inserts a new item or **replaces** an existing one entirely (it does not merge fields).
 - `patch` merges the given fields into an existing item. It cannot change the item's `id`.
 - `delete` returns `True` if the item was removed, `False` if it did not exist.
@@ -91,7 +91,7 @@ Errors are raised, not returned:
 |---|---|
 | `save` an item without an `id` (or with an empty one) | `ValueError` |
 | `patch` with data that changes the item's `id` | `ValueError` |
-| `patch` a missing item | `objbase.ItemNotFoundError` (an `CollectionError` and a `LookupError`) |
+| `patch` a missing item | `objbase.ItemNotFoundError` (a `CollectionError` and a `LookupError`) |
 | The storage backend reports a failed write | `objbase.CollectionError` |
 
 `CollectionError` is the base class of all objbase errors.
@@ -244,7 +244,7 @@ client = pymongo.MongoClient("mongodb://localhost:27017")
 storage = MongoDBStorage(mongo_client=client)
 ```
 
-Items are stored in the `collection.py` database, one collection per `item_type`.
+Items are stored in the `inventory` database, one collection per `item_type`.
 The MongoDB `_id` field is stripped from results automatically.
 Pass a pre-configured `pymongo.MongoClient`. Requires `pymongo`. `AsyncMongoDBStorage`
 takes a `pymongo.AsyncMongoClient` and uses the same layout, so sync and async adapters
@@ -337,7 +337,7 @@ todos = AsyncCollection(item_type="todo", storage=AsyncRedisStorage(client))
 
 await todos.save({"id": "1", "title": "Buy milk", "done": False})
 await todos.get("1")  # → {"id": "1", "title": "Buy milk", "done": False}
-await todos.filter()  # → [{"id": "1", ...}]
+await todos.items()  # → [{"id": "1", ...}]
 await todos.keys()  # → ["1"]
 await todos.patch("1", {"done": True})  # → {"id": "1", ..., "done": True}
 await todos.delete("1")  # → True
@@ -421,7 +421,7 @@ def get_todos(request: Request) -> AsyncCollection:
 
 @app.get("/todos")
 async def list_todos(todos: AsyncCollection = Depends(get_todos)):
-    return await todos.filter()
+    return await todos.items()
 
 
 @app.get("/todos/{todo_id}")

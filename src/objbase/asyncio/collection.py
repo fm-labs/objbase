@@ -20,7 +20,7 @@ class AsyncCollection:
     async def keys(self) -> list[str]:
         return await self.storage.akeys(self.item_type)
 
-    async def filter(self) -> list[Item]:
+    async def items(self) -> list[Item]:
         return await self.storage.aitems(self.item_type)
 
     async def get(self, id: str) -> Item | None:

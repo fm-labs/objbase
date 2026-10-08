@@ -76,12 +76,12 @@ class TestCollectionGetFilter:
     def test_get_missing_returns_none(self, todos):
         assert todos.get("nope") is None
 
-    def test_filter_returns_all_items(self, todos):
+    def test_items_returns_all_items(self, todos):
         todos.save({"id": "1"})
         todos.save({"id": "2"})
         assert sorted(i["id"] for i in todos.items()) == ["1", "2"]
 
-    def test_filter_empty(self, todos):
+    def test_items_empty(self, todos):
         assert todos.items() == []
 
 
@@ -180,7 +180,7 @@ class TestPydanticCollection:
         with pytest.raises(pydantic.ValidationError):
             model_todos.filter()
 
-    def test_filter_returns_models(self, model_todos):
+    def test_items_returns_models(self, model_todos):
         model_todos.save(Todo(id="1", title="a"))
         model_todos.save(Todo(id="2", title="b"))
         result = model_todos.filter()
