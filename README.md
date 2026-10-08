@@ -11,7 +11,7 @@ __No thrills__ - **just a simple key-value store for serializable Python objects
 
 - Basic CRUD operations: `save`, `get`, `filter`, `keys`, `patch`, `delete`
 - Multiple storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
-- Optional Pydantic model validation with `PydanticInventory` / `AsyncPydanticInventory`
+- Optional Pydantic model validation with `PydanticCollection` / `AsyncPydanticCollection`
 - Async support via `AsyncCollection` with async storage adapters (in-memory, file-based, SQLite, Redis, MongoDB)
 - Easy FastAPI integration with dependency injection
 - Fully typed (ships `py.typed`), checked with `mypy --strict`
@@ -28,7 +28,7 @@ and SQLite storage work out of the box. Install extras for the other backends:
 pip install objbase              # core only
 pip install "objbase[redis]"     # + redis-py, for (Async)RedisStorage
 pip install "objbase[mongodb]"   # + pymongo, for (Async)MongoDBStorage
-pip install "objbase[pydantic]"  # + pydantic, for (Async)PydanticInventory
+pip install "objbase[pydantic]"  # + pydantic, for (Async)PydanticCollection
 pip install "objbase[all]"       # everything
 # or with uv
 uv add "objbase[redis]"
@@ -66,14 +66,14 @@ or from their submodules as in the examples below:
 |---|---|
 | `objbase.interface` | `Storage`, `AsyncStorage` protocols and the `Item` type |
 | `objbase.inventory` | `Collection` |
-| `objbase.errors` | `InventoryError`, `ItemNotFoundError` |
-| `objbase.pydantic` | `PydanticInventory`, `AsyncPydanticInventory` (needs `objbase[pydantic]`) |
+| `objbase.errors` | `CollectionError`, `ItemNotFoundError` |
+| `objbase.pydantic` | `PydanticCollection`, `AsyncPydanticCollection` (needs `objbase[pydantic]`) |
 | `objbase.storage.{inmemory,file,sqlite,redis,mongodb}_storage` | Sync storage adapters |
 | `objbase.asyncio.inventory` | `AsyncCollection` |
 | `objbase.asyncio.storage.{file,sqlite,redis,mongodb}_storage` | Async storage adapters |
 
-`import objbase` works without Pydantic installed; `PydanticInventory` and
-`AsyncPydanticInventory` are loaded on first access.
+`import objbase` works without Pydantic installed; `PydanticCollection` and
+`AsyncPydanticCollection` are loaded on first access.
 
 ### Behaviour
 
@@ -91,10 +91,10 @@ Errors are raised, not returned:
 |---|---|
 | `save` an item without an `id` (or with an empty one) | `ValueError` |
 | `patch` with data that changes the item's `id` | `ValueError` |
-| `patch` a missing item | `objbase.ItemNotFoundError` (an `InventoryError` and a `LookupError`) |
-| The storage backend reports a failed write | `objbase.InventoryError` |
+| `patch` a missing item | `objbase.ItemNotFoundError` (an `CollectionError` and a `LookupError`) |
+| The storage backend reports a failed write | `objbase.CollectionError` |
 
-`InventoryError` is the base class of all objbase errors.
+`CollectionError` is the base class of all objbase errors.
 
 ---
 
@@ -254,12 +254,12 @@ can share data. Both accept an optional MongoDB `query` in `items` / `aitems` to
 
 ## Pydantic Models
 
-Use `PydanticInventory` to validate items against a Pydantic `BaseModel`.
+Use `PydanticCollection` to validate items against a Pydantic `BaseModel`.
 `save` and `get` return typed model instances instead of plain dicts.
 
 ```python
 from pydantic import BaseModel
-from objbase.pydantic import PydanticInventory
+from objbase.pydantic import PydanticCollection
 from objbase.storage.inmemory import InMemoryStorage
 
 
@@ -269,7 +269,7 @@ class Todo(BaseModel):
     done: bool = False
 
 
-todos = PydanticInventory(
+todos = PydanticCollection(
     item_type="todo",
     storage=InMemoryStorage(),
     model_class=Todo,
@@ -299,15 +299,15 @@ so values Pydantic coerces are stored normalized: patching `{"done": "true"}` st
 
 ### Async
 
-`AsyncPydanticInventory` has the same methods and behaviour, as coroutines, and
+`AsyncPydanticCollection` has the same methods and behaviour, as coroutines, and
 takes an async storage adapter:
 
 ```python
 import redis.asyncio
 from objbase.asyncio.storage.redis import AsyncRedisStorage
-from objbase.pydantic import AsyncPydanticInventory
+from objbase.pydantic import AsyncPydanticCollection
 
-todos = AsyncPydanticInventory(
+todos = AsyncPydanticCollection(
     item_type="todo",
     storage=AsyncRedisStorage(redis.asyncio.Redis()),
     model_class=Todo,
@@ -343,7 +343,7 @@ await todos.patch("1", {"done": True})  # → {"id": "1", ..., "done": True}
 await todos.delete("1")  # → True
 ```
 
-For Pydantic models, use `AsyncPydanticInventory` (see [Pydantic Models: Async](#async)).
+For Pydantic models, use `AsyncPydanticCollection` (see [Pydantic Models: Async](#async)).
 
 Passing a sync-only adapter (e.g. `SQLiteStorage`) to `AsyncCollection`
 raises `TypeError`; use its async counterpart (e.g. `AsyncSQLiteStorage`) instead.
@@ -359,9 +359,9 @@ Runnable scripts are in [`examples/`](examples/):
 | Script | Shows |
 |---|---|
 | `dict_example.py` | `Collection` with plain dicts (in-memory) |
-| `pydantic_example.py` | `PydanticInventory` (in-memory) |
+| `pydantic_example.py` | `PydanticCollection` (in-memory) |
 | `async_example.py` | `AsyncCollection` (in-memory) |
-| `async_pydantic_example.py` | `AsyncPydanticInventory` (in-memory) |
+| `async_pydantic_example.py` | `AsyncPydanticCollection` (in-memory) |
 | `async_file_example.py` | `AsyncLocalFileStorage` |
 | `async_directory_example.py` | `AsyncLocalDirectoryStorage`, incl. concurrent saves and `arebuild_index` |
 | `async_sqlite_example.py` | `AsyncSQLiteStorage` |
@@ -585,7 +585,7 @@ class MyCustomStorage:
 
 
 # Works — no explicit inheritance required
-todos = Inventory(item_type="todo", storage=MyCustomStorage())
+todos = Collection(item_type="todo", storage=MyCustomStorage())
 ```
 
 ### Optional explicit inheritance
@@ -623,7 +623,7 @@ hints. The library itself is checked with `mypy --strict`.
 
 - Items are typed as `objbase.Item`, an alias for `dict[str, Any]`.
 - `Collection` and `AsyncCollection` accept and return `Item`; `get` returns `Item | None`.
-- `PydanticInventory` and `AsyncPydanticInventory` are generic over their model class, which is inferred from
+- `PydanticCollection` and `AsyncPydanticCollection` are generic over their model class, which is inferred from
   `model_class` (see [Pydantic Models](#pydantic-models)).
 - Storage adapters accept any structurally compatible client. For example,
   `RedisStorage` and `AsyncRedisStorage` take anything with Redis's

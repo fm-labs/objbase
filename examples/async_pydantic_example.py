@@ -2,7 +2,7 @@ import asyncio
 
 import pydantic
 
-from objbase.pydantic import AsyncPydanticInventory
+from objbase.pydantic import AsyncPydanticCollection
 from objbase.storage.inmemory import InMemoryStorage
 
 
@@ -14,7 +14,7 @@ class Todo(pydantic.BaseModel):
 
 async def main() -> None:
     # Replace with AsyncRedisStorage(redis.asyncio.Redis(...)) for real persistence
-    todos_inventory = AsyncPydanticInventory(item_type="todos", storage=InMemoryStorage(), model_class=Todo)
+    todos_inventory = AsyncPydanticCollection(item_type="todos", storage=InMemoryStorage(), model_class=Todo)
 
     # Create a new to-do item
     created_todo = await todos_inventory.save(Todo(id="1", title="Buy milk"))
