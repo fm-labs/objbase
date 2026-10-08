@@ -26,7 +26,7 @@ uv run pytest --ignore=tests/test_redis_storage.py --ignore=tests/test_async_red
 
 MongoDB tests use
 `mongo:7.0`, because `mongo:latest` does not start on Linux kernels 6.19+ (as used by
-recent Docker Desktop VMs). Override the image with `INVENTORYDB_TEST_MONGO_IMAGE`.
+recent Docker Desktop VMs). Override the image with `OBJBASE_TEST_MONGO_IMAGE`.
 
 ### Linting and formatting
 

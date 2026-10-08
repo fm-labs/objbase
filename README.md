@@ -60,7 +60,20 @@ Swapping the backend requires only changing the `storage` argument — the `Inve
 API stays identical.
 
 All public classes can be imported from the top-level `objbase` package, as above,
-or from their submodules (e.g. `objbase.storage.sqlite_storage`) as in the examples below.
+or from their submodules as in the examples below:
+
+| Module | Contents |
+|---|---|
+| `objbase.interface` | `Storage`, `AsyncStorage` protocols and the `Item` type |
+| `objbase.inventory` | `Inventory` |
+| `objbase.errors` | `InventoryError`, `ItemNotFoundError` |
+| `objbase.pydantic` | `PydanticInventory`, `AsyncPydanticInventory` (needs `objbase[pydantic]`) |
+| `objbase.storage.{inmemory,file,sqlite,redis,mongodb}_storage` | Sync storage adapters |
+| `objbase.asyncio.inventory` | `AsyncInventory` |
+| `objbase.asyncio.storage.{file,sqlite,redis,mongodb}_storage` | Async storage adapters |
+
+`import objbase` works without Pydantic installed; `PydanticInventory` and
+`AsyncPydanticInventory` are loaded on first access.
 
 ### Behaviour
 
@@ -76,9 +89,12 @@ Errors are raised, not returned:
 
 | Situation | Exception |
 |---|---|
-| `save` an item without an `id` | `ValueError` |
-| `patch` a missing item | `objbase.errors.ItemNotFoundError` (a `LookupError`) |
-| The storage backend reports a failed write | `objbase.errors.InventoryError` |
+| `save` an item without an `id` (or with an empty one) | `ValueError` |
+| `patch` with data that changes the item's `id` | `ValueError` |
+| `patch` a missing item | `objbase.ItemNotFoundError` (an `InventoryError` and a `LookupError`) |
+| The storage backend reports a failed write | `objbase.InventoryError` |
+
+`InventoryError` is the base class of all objbase errors.
 
 ---
 
@@ -270,6 +286,7 @@ The model type is inferred from `model_class`, so type checkers know that
 `todos.keys()` returns the item ids (`list[str]`) without loading or validating
 any items.
 
+`patch` accepts either a dict of fields or a model instance.
 `save` and `patch` validate the complete item before writing it. Data that fails
 validation raises `pydantic.ValidationError` and is never stored:
 
@@ -286,6 +303,8 @@ so values Pydantic coerces are stored normalized: patching `{"done": "true"}` st
 takes an async storage adapter:
 
 ```python
+import redis.asyncio
+from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
 from objbase.pydantic import AsyncPydanticInventory
 
 todos = AsyncPydanticInventory(
@@ -530,11 +549,7 @@ The order of `keys` and `items` is unspecified.
 ### Async — `AsyncStorage`
 
 ```python
-# objbase/asyncio/async_storage.py
-from typing import Protocol, runtime_checkable
-from objbase.interface import Item
-
-
+# objbase/interface.py (next to Storage)
 @runtime_checkable
 class AsyncStorage(Protocol):
     async def akeys(self, item_type: str) -> list[str]: ...
@@ -611,8 +626,9 @@ hints. The library itself is checked with `mypy --strict`.
 - `PydanticInventory` and `AsyncPydanticInventory` are generic over their model class, which is inferred from
   `model_class` (see [Pydantic Models](#pydantic-models)).
 - Storage adapters accept any structurally compatible client. For example,
-  `RedisStorage` takes anything with Redis's `hget`/`hset`/`hdel`/`hvals`
-  commands (`redis.Redis`, `redis.asyncio.Redis`, or compatible clients).
+  `RedisStorage` and `AsyncRedisStorage` take anything with Redis's
+  `hkeys`/`hvals`/`hget`/`hset`/`hdel` commands (`redis.Redis` or
+  `redis.asyncio.Redis` respectively, or compatible clients).
 
 ---
 
