@@ -5,7 +5,7 @@ Item = dict[str, Any]
 
 
 @runtime_checkable
-class InventoryStorage(Protocol):
+class Storage(Protocol):
     """Storage contract shared by all adapters.
 
     - ``keys`` returns all item ids of a type, or ``[]`` if there are none.
@@ -25,3 +25,18 @@ class InventoryStorage(Protocol):
     def write(self, item_type: str, item: Item) -> bool: ...
 
     def delete(self, item_type: str, id: str) -> bool: ...
+
+
+@runtime_checkable
+class AsyncStorage(Protocol):
+    """Async counterpart of ``Storage``, with the same contract."""
+
+    async def akeys(self, item_type: str) -> list[str]: ...
+
+    async def aitems(self, item_type: str) -> list[Item]: ...
+
+    async def aread(self, item_type: str, id: str) -> Item | None: ...
+
+    async def awrite(self, item_type: str, item: Item) -> bool: ...
+
+    async def adelete(self, item_type: str, id: str) -> bool: ...

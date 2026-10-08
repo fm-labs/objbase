@@ -1,9 +1,8 @@
 import pydantic
 
-from objbase.asyncio.async_inventory import AsyncInventory
-from objbase.asyncio.async_storage import AsyncInventoryStorage
+from objbase.asyncio.inventory import AsyncInventory
 from objbase.errors import ItemNotFoundError
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import AsyncStorage, Item, Storage
 from objbase.inventory import Inventory, check_patch_data
 
 
@@ -47,7 +46,7 @@ class PydanticInventory[M: pydantic.BaseModel]:
     that fails validation raises ``pydantic.ValidationError`` and is never stored.
     """
 
-    def __init__(self, item_type: str, storage: InventoryStorage, model_class: type[M]):
+    def __init__(self, item_type: str, storage: Storage, model_class: type[M]):
         self.model_class = model_class
         self.inventory = Inventory(item_type, storage)
 
@@ -56,7 +55,7 @@ class PydanticInventory[M: pydantic.BaseModel]:
         return self.inventory.item_type
 
     @property
-    def storage(self) -> InventoryStorage:
+    def storage(self) -> Storage:
         return self.inventory.storage
 
     def keys(self) -> list[str]:
@@ -83,12 +82,12 @@ class PydanticInventory[M: pydantic.BaseModel]:
 
 
 class AsyncPydanticInventory[M: pydantic.BaseModel]:
-    """Async counterpart of ``PydanticInventory``, backed by an ``AsyncInventoryStorage``.
+    """Async counterpart of ``PydanticInventory``, backed by an ``AsyncStorage``.
 
     Same methods and behaviour as ``PydanticInventory``, but every method is a coroutine.
     """
 
-    def __init__(self, item_type: str, storage: AsyncInventoryStorage, model_class: type[M]):
+    def __init__(self, item_type: str, storage: AsyncStorage, model_class: type[M]):
         self.model_class = model_class
         self.inventory = AsyncInventory(item_type, storage)
 
@@ -97,7 +96,7 @@ class AsyncPydanticInventory[M: pydantic.BaseModel]:
         return self.inventory.item_type
 
     @property
-    def storage(self) -> AsyncInventoryStorage:
+    def storage(self) -> AsyncStorage:
         return self.inventory.storage
 
     async def keys(self) -> list[str]:

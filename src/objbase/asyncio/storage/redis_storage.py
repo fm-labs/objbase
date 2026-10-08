@@ -1,12 +1,11 @@
 import json
 
-from objbase.asyncio.async_storage import AsyncInventoryStorage
-from objbase.interface import Item
+from objbase.interface import AsyncStorage, Item
 from objbase.storage.redis_storage import DEFAULT_KEY_PREFIX, RedisHashClient, decode_key, redis_type_key
 
 
-class AsyncRedisInventoryStorage(AsyncInventoryStorage):
-    """Async counterpart of ``RedisInventoryStorage``, using the same data layout.
+class AsyncRedisStorage(AsyncStorage):
+    """Async counterpart of ``RedisStorage``, using the same data layout.
 
     Takes an async client such as ``redis.asyncio.Redis``.
     """

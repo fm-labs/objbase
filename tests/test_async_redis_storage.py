@@ -1,10 +1,10 @@
-"""Tests for AsyncRedisInventoryStorage using a real Redis via testcontainers."""
+"""Tests for AsyncRedisStorage using a real Redis via testcontainers."""
 
 import pytest
 import redis.asyncio
 from testcontainers.community.redis import RedisContainer
 
-from objbase.asyncio.async_redis_storage import AsyncRedisInventoryStorage
+from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -32,8 +32,8 @@ async def redis_client(redis_container):
 
 
 @pytest.fixture()
-async def storage(redis_client) -> AsyncRedisInventoryStorage:
-    return AsyncRedisInventoryStorage(redis_client)
+async def storage(redis_client) -> AsyncRedisStorage:
+    return AsyncRedisStorage(redis_client)
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ async def storage(redis_client) -> AsyncRedisInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncRedisInventoryStorageWrite:
+class TestAsyncRedisStorageWrite:
     async def test_write_returns_true(self, storage):
         assert await storage.awrite("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -75,7 +75,7 @@ class TestAsyncRedisInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncRedisInventoryStorageRead:
+class TestAsyncRedisStorageRead:
     async def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         await storage.awrite("todo", item)
@@ -102,7 +102,7 @@ class TestAsyncRedisInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncRedisInventoryStorageSelect:
+class TestAsyncRedisStorageSelect:
     async def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert await storage.aitems("todo") == []
 
@@ -137,7 +137,7 @@ class TestAsyncRedisInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncRedisInventoryStorageDelete:
+class TestAsyncRedisStorageDelete:
     async def test_delete_returns_true_when_item_exists(self, storage):
         await storage.awrite("todo", {"id": "1"})
         assert await storage.adelete("todo", "1") is True
@@ -173,7 +173,7 @@ class TestAsyncRedisInventoryStorageDelete:
         assert await storage.aitems("notes") == [{"id": "1"}]
 
 
-class TestAsyncRedisInventoryStorageLayout:
+class TestAsyncRedisStorageLayout:
     async def test_write_preserves_value_types(self, storage):
         item = {"id": "1", "done": False, "count": 3, "tags": ["a"], "meta": {"k": None}}
         await storage.awrite("todo", item)
@@ -187,7 +187,7 @@ class TestAsyncRedisInventoryStorageLayout:
         )
         try:
             await client.flushdb()
-            storage = AsyncRedisInventoryStorage(client)
+            storage = AsyncRedisStorage(client)
             await storage.awrite("todo", {"id": "1", "done": True})
             assert await storage.aread("todo", "1") == {"id": "1", "done": True}
             assert await storage.aitems("todo") == [{"id": "1", "done": True}]
@@ -196,9 +196,9 @@ class TestAsyncRedisInventoryStorageLayout:
             await client.aclose()
 
     async def test_shares_data_with_sync_storage(self, redis_container, storage):
-        from objbase.storage.redis_storage import RedisInventoryStorage
+        from objbase.storage.redis_storage import RedisStorage
 
-        RedisInventoryStorage(redis_container.get_client()).write("todo", {"id": "1", "n": 1})
+        RedisStorage(redis_container.get_client()).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}
 
     async def test_types_sharing_a_prefix_do_not_collide(self, storage):

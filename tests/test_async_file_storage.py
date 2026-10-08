@@ -1,4 +1,4 @@
-"""Tests for AsyncFileBasedInventoryStorage and AsyncDirectoryBasedInventoryStorage."""
+"""Tests for AsyncFileBasedStorage and AsyncDirectoryBasedStorage."""
 
 import asyncio
 import os
@@ -6,13 +6,13 @@ import threading
 
 import pytest
 
-from objbase.asyncio.async_file_storage import AsyncDirectoryBasedInventoryStorage, AsyncFileBasedInventoryStorage
-from objbase.asyncio.async_inventory import AsyncInventory
-from objbase.storage.file_storage import DirectoryBasedInventoryStorage, FileBasedInventoryStorage
+from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage, AsyncFileBasedStorage
+from objbase.storage.file_storage import DirectoryBasedStorage, FileBasedStorage
 
 ADAPTERS = [
-    pytest.param((AsyncFileBasedInventoryStorage, FileBasedInventoryStorage), id="file"),
-    pytest.param((AsyncDirectoryBasedInventoryStorage, DirectoryBasedInventoryStorage), id="directory"),
+    pytest.param((AsyncFileBasedStorage, FileBasedStorage), id="file"),
+    pytest.param((AsyncDirectoryBasedStorage, DirectoryBasedStorage), id="directory"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -134,9 +134,9 @@ class TestAsyncFileStorageBehaviour:
         assert await todos.patch("1", {"done": True}) == {"id": "1", "done": True}
 
 
-class TestAsyncDirectoryBasedInventoryStorageIndex:
+class TestAsyncDirectoryBasedStorageIndex:
     async def test_rebuild_index(self, base_dir):
-        storage = AsyncDirectoryBasedInventoryStorage(base_dir)
+        storage = AsyncDirectoryBasedStorage(base_dir)
         await storage.awrite("todo", {"id": "1"})
         await storage.awrite("todo", {"id": "2"})
         os.remove(os.path.join(base_dir, "todo", "2.json"))  # index now lists a missing item

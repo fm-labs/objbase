@@ -6,12 +6,12 @@ import pytest
 from objbase.errors import InventoryError, ItemNotFoundError
 from objbase.inventory import Inventory
 from objbase.pydantic import PydanticInventory
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
 
 
 @pytest.fixture()
-def storage() -> InMemoryInventoryStorage:
-    return InMemoryInventoryStorage()
+def storage() -> InMemoryStorage:
+    return InMemoryStorage()
 
 
 @pytest.fixture()
@@ -19,7 +19,7 @@ def todos(storage) -> Inventory:
     return Inventory(item_type="todo", storage=storage)
 
 
-class FailingStorage(InMemoryInventoryStorage):
+class FailingStorage(InMemoryStorage):
     def write(self, item_type, item):
         return False
 
@@ -118,7 +118,7 @@ class TestInventoryPatch:
 
     def test_patch_raises_when_storage_write_fails(self):
         storage = FailingStorage()
-        InMemoryInventoryStorage.write(storage, "todo", {"id": "1"})
+        InMemoryStorage.write(storage, "todo", {"id": "1"})
         with pytest.raises(InventoryError, match="Failed to patch"):
             Inventory("todo", storage).patch("1", {"done": True})
 

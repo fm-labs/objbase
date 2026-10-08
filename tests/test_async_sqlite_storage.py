@@ -1,4 +1,4 @@
-"""Tests for AsyncSQLiteInventoryStorage."""
+"""Tests for AsyncSQLiteStorage."""
 
 import asyncio
 import sqlite3
@@ -6,9 +6,9 @@ import threading
 
 import pytest
 
-from objbase.asyncio.async_inventory import AsyncInventory
-from objbase.asyncio.async_sqlite_storage import AsyncSQLiteInventoryStorage
-from objbase.storage.sqlite_storage import SQLiteInventoryStorage
+from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
+from objbase.storage.sqlite_storage import SQLiteStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -21,8 +21,8 @@ def db_path(tmp_path) -> str:
 
 
 @pytest.fixture()
-def storage(db_path) -> AsyncSQLiteInventoryStorage:
-    return AsyncSQLiteInventoryStorage(db_path)
+def storage(db_path) -> AsyncSQLiteStorage:
+    return AsyncSQLiteStorage(db_path)
 
 
 # ---------------------------------------------------------------------------
@@ -30,9 +30,9 @@ def storage(db_path) -> AsyncSQLiteInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncSQLiteInventoryStorageInit:
+class TestAsyncSQLiteStorageInit:
     def test_init_creates_items_table(self, db_path):
-        AsyncSQLiteInventoryStorage(db_path)
+        AsyncSQLiteStorage(db_path)
         with sqlite3.connect(db_path) as conn:
             row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='items'").fetchone()
         assert row is not None
@@ -46,7 +46,7 @@ class TestAsyncSQLiteInventoryStorageInit:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncSQLiteInventoryStorageWrite:
+class TestAsyncSQLiteStorageWrite:
     async def test_write_returns_true(self, storage):
         assert await storage.awrite("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -71,7 +71,7 @@ class TestAsyncSQLiteInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncSQLiteInventoryStorageRead:
+class TestAsyncSQLiteStorageRead:
     async def test_read_returns_none_for_unknown_id(self, storage):
         assert await storage.aread("todo", "nonexistent") is None
 
@@ -96,7 +96,7 @@ class TestAsyncSQLiteInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncSQLiteInventoryStorageDelete:
+class TestAsyncSQLiteStorageDelete:
     async def test_delete_returns_true_when_item_exists(self, storage):
         await storage.awrite("todo", {"id": "1"})
         assert await storage.adelete("todo", "1") is True
@@ -116,12 +116,12 @@ class TestAsyncSQLiteInventoryStorageDelete:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncSQLiteInventoryStorageBehaviour:
+class TestAsyncSQLiteStorageBehaviour:
     async def test_shares_data_with_sync_storage(self, db_path, storage):
-        SQLiteInventoryStorage(db_path).write("todo", {"id": "1", "n": 1})
+        SQLiteStorage(db_path).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}
         await storage.awrite("todo", {"id": "2", "n": 2})
-        assert SQLiteInventoryStorage(db_path).read("todo", "2") == {"id": "2", "n": 2}
+        assert SQLiteStorage(db_path).read("todo", "2") == {"id": "2", "n": 2}
 
     async def test_runs_off_the_event_loop_thread(self, storage, monkeypatch):
         threads = []

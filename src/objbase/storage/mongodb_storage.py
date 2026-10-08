@@ -1,14 +1,14 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import Item, Storage
 
 if TYPE_CHECKING:
     from pymongo import MongoClient
     from pymongo.collection import Collection
 
 
-class MongoDBInventoryStorage(InventoryStorage):
+class MongoDBStorage(Storage):
     """MongoDB-based storage implementation for inventory items."""
 
     def __init__(self, mongo_client: "MongoClient[Item]"):

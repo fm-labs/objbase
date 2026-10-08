@@ -3,14 +3,14 @@
 import asyncio
 import os
 
-from objbase.asyncio.async_inventory import AsyncInventory
-from objbase.asyncio.async_sqlite_storage import AsyncSQLiteInventoryStorage
+from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
 
 
 async def main() -> None:
     db_path = os.getenv("SQLITE_DB_PATH", os.path.join("data", "todos.db"))
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)  # sqlite3 doesn't create missing directories
-    storage = AsyncSQLiteInventoryStorage(db_path=db_path)
+    storage = AsyncSQLiteStorage(db_path=db_path)
     todos_inventory = AsyncInventory(item_type="todo", storage=storage)
 
     # Create some to-do items

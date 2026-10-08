@@ -1,11 +1,11 @@
-"""Tests for RedisInventoryStorage using a real Redis via testcontainers."""
+"""Tests for RedisStorage using a real Redis via testcontainers."""
 
 import json
 
 import pytest
 from testcontainers.community.redis import RedisContainer
 
-from objbase.storage.redis_storage import RedisInventoryStorage
+from objbase.storage.redis_storage import RedisStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -28,8 +28,8 @@ def redis_client(redis_container):
 
 
 @pytest.fixture()
-def storage(redis_client) -> RedisInventoryStorage:
-    return RedisInventoryStorage(redis_client)
+def storage(redis_client) -> RedisStorage:
+    return RedisStorage(redis_client)
 
 
 # ---------------------------------------------------------------------------
@@ -37,7 +37,7 @@ def storage(redis_client) -> RedisInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestRedisInventoryStorageWrite:
+class TestRedisStorageWrite:
     def test_write_returns_true(self, storage):
         assert storage.write("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -73,7 +73,7 @@ class TestRedisInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestRedisInventoryStorageRead:
+class TestRedisStorageRead:
     def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         storage.write("todo", item)
@@ -100,7 +100,7 @@ class TestRedisInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestRedisInventoryStorageSelect:
+class TestRedisStorageSelect:
     def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert storage.items("todo") == []
 
@@ -135,7 +135,7 @@ class TestRedisInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestRedisInventoryStorageDelete:
+class TestRedisStorageDelete:
     def test_delete_returns_true_when_item_exists(self, storage):
         storage.write("todo", {"id": "1"})
         assert storage.delete("todo", "1") is True
@@ -176,10 +176,10 @@ class TestRedisInventoryStorageDelete:
 # ---------------------------------------------------------------------------
 
 
-class TestRedisInventoryStorageLayout:
+class TestRedisStorageLayout:
     def test_works_with_decode_responses_client(self, redis_container, redis_client):
         client = redis_container.get_client(decode_responses=True)
-        storage = RedisInventoryStorage(client)
+        storage = RedisStorage(client)
         item = {"id": "1", "done": True}
         storage.write("todo", item)
         assert storage.read("todo", "1") == item
@@ -189,7 +189,7 @@ class TestRedisInventoryStorageLayout:
 
     def test_bytes_and_str_clients_share_data(self, redis_container, storage):
         storage.write("todo", {"id": "1", "count": 2})
-        str_storage = RedisInventoryStorage(redis_container.get_client(decode_responses=True))
+        str_storage = RedisStorage(redis_container.get_client(decode_responses=True))
         assert str_storage.read("todo", "1") == {"id": "1", "count": 2}
 
     def test_types_sharing_a_prefix_do_not_collide(self, storage):
@@ -200,14 +200,14 @@ class TestRedisInventoryStorageLayout:
         assert storage.items("todo:archive") == [{"id": "2"}]
 
     def test_custom_key_prefix(self, redis_client):
-        storage = RedisInventoryStorage(redis_client, key_prefix="myapp:")
+        storage = RedisStorage(redis_client, key_prefix="myapp:")
         storage.write("todo", {"id": "1"})
         assert redis_client.hexists("myapp:todo", "1")
         assert not redis_client.exists("inventory:todo")
 
     def test_different_prefixes_are_isolated(self, redis_client):
-        a = RedisInventoryStorage(redis_client, key_prefix="a:")
-        b = RedisInventoryStorage(redis_client, key_prefix="b:")
+        a = RedisStorage(redis_client, key_prefix="a:")
+        b = RedisStorage(redis_client, key_prefix="b:")
         a.write("todo", {"id": "1"})
         assert b.read("todo", "1") is None
         assert b.items("todo") == []

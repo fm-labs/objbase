@@ -1,8 +1,8 @@
-"""Tests for SQLiteInventoryStorage."""
+"""Tests for SQLiteStorage."""
 
 import pytest
 
-from objbase.storage.sqlite_storage import SQLiteInventoryStorage
+from objbase.storage.sqlite_storage import SQLiteStorage
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -15,8 +15,8 @@ def db_path(tmp_path) -> str:
 
 
 @pytest.fixture()
-def storage(db_path) -> SQLiteInventoryStorage:
-    return SQLiteInventoryStorage(db_path)
+def storage(db_path) -> SQLiteStorage:
+    return SQLiteStorage(db_path)
 
 
 # ---------------------------------------------------------------------------
@@ -24,25 +24,25 @@ def storage(db_path) -> SQLiteInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestSQLiteInventoryStorageInit:
+class TestSQLiteStorageInit:
     def test_init_creates_db_file(self, db_path):
         import os
 
-        SQLiteInventoryStorage(db_path)
+        SQLiteStorage(db_path)
         assert os.path.exists(db_path)
 
     def test_init_creates_items_table(self, db_path):
         import sqlite3
 
-        SQLiteInventoryStorage(db_path)
+        SQLiteStorage(db_path)
         with sqlite3.connect(db_path) as conn:
             row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='items'").fetchone()
         assert row is not None
 
     def test_init_is_idempotent(self, db_path):
         """Constructing a second instance against the same file must not raise."""
-        SQLiteInventoryStorage(db_path)
-        SQLiteInventoryStorage(db_path)
+        SQLiteStorage(db_path)
+        SQLiteStorage(db_path)
 
 
 # ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class TestSQLiteInventoryStorageInit:
 # ---------------------------------------------------------------------------
 
 
-class TestSQLiteInventoryStorageWrite:
+class TestSQLiteStorageWrite:
     def test_write_returns_true(self, storage):
         assert storage.write("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -80,8 +80,8 @@ class TestSQLiteInventoryStorageWrite:
         assert len(storage.items("todo")) == 3
 
     def test_write_persists_across_instances(self, db_path):
-        SQLiteInventoryStorage(db_path).write("todo", {"id": "1", "title": "Hello"})
-        result = SQLiteInventoryStorage(db_path).read("todo", "1")
+        SQLiteStorage(db_path).write("todo", {"id": "1", "title": "Hello"})
+        result = SQLiteStorage(db_path).read("todo", "1")
         assert result == {"id": "1", "title": "Hello"}
 
 
@@ -90,7 +90,7 @@ class TestSQLiteInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestSQLiteInventoryStorageRead:
+class TestSQLiteStorageRead:
     def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         storage.write("todo", item)
@@ -118,7 +118,7 @@ class TestSQLiteInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestSQLiteInventoryStorageSelect:
+class TestSQLiteStorageSelect:
     def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert storage.items("todo") == []
 
@@ -153,7 +153,7 @@ class TestSQLiteInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestSQLiteInventoryStorageDelete:
+class TestSQLiteStorageDelete:
     def test_delete_returns_true_when_item_exists(self, storage):
         storage.write("todo", {"id": "1"})
         assert storage.delete("todo", "1") is True

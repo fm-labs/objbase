@@ -4,20 +4,19 @@ import importlib
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
-from objbase.asyncio.async_file_storage import AsyncDirectoryBasedInventoryStorage, AsyncFileBasedInventoryStorage
-from objbase.asyncio.async_inventory import AsyncInventory
-from objbase.asyncio.async_mongodb_storage import AsyncMongoDBInventoryStorage
-from objbase.asyncio.async_redis_storage import AsyncRedisInventoryStorage
-from objbase.asyncio.async_sqlite_storage import AsyncSQLiteInventoryStorage
-from objbase.asyncio.async_storage import AsyncInventoryStorage
+from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage, AsyncFileBasedStorage
+from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
+from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
+from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
 from objbase.errors import InventoryError, ItemNotFoundError
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import AsyncStorage, Item, Storage
 from objbase.inventory import Inventory
-from objbase.storage.file_storage import DirectoryBasedInventoryStorage, FileBasedInventoryStorage
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
-from objbase.storage.mongodb_storage import MongoDBInventoryStorage
-from objbase.storage.redis_storage import RedisInventoryStorage
-from objbase.storage.sqlite_storage import SQLiteInventoryStorage
+from objbase.storage.file_storage import DirectoryBasedStorage, FileBasedStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.mongodb_storage import MongoDBStorage
+from objbase.storage.redis_storage import RedisStorage
+from objbase.storage.sqlite_storage import SQLiteStorage
 
 if TYPE_CHECKING:
     # Lets type checkers see the real classes; at runtime they are loaded lazily by __getattr__.
@@ -29,26 +28,26 @@ except PackageNotFoundError:  # running from a source tree without installation
     __version__ = "0.0.0"
 
 __all__ = [
-    "AsyncDirectoryBasedInventoryStorage",
-    "AsyncFileBasedInventoryStorage",
+    "AsyncDirectoryBasedStorage",
+    "AsyncFileBasedStorage",
     "AsyncInventory",
-    "AsyncInventoryStorage",
-    "AsyncMongoDBInventoryStorage",
+    "AsyncStorage",
+    "AsyncMongoDBStorage",
     "AsyncPydanticInventory",
-    "AsyncRedisInventoryStorage",
-    "AsyncSQLiteInventoryStorage",
-    "DirectoryBasedInventoryStorage",
-    "FileBasedInventoryStorage",
-    "InMemoryInventoryStorage",
+    "AsyncRedisStorage",
+    "AsyncSQLiteStorage",
+    "DirectoryBasedStorage",
+    "FileBasedStorage",
+    "InMemoryStorage",
     "Inventory",
     "InventoryError",
-    "InventoryStorage",
+    "Storage",
     "Item",
     "ItemNotFoundError",
-    "MongoDBInventoryStorage",
+    "MongoDBStorage",
     "PydanticInventory",
-    "RedisInventoryStorage",
-    "SQLiteInventoryStorage",
+    "RedisStorage",
+    "SQLiteStorage",
 ]
 
 

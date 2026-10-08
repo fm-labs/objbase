@@ -1,16 +1,15 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-from objbase.asyncio.async_storage import AsyncInventoryStorage
-from objbase.interface import Item
+from objbase.interface import AsyncStorage, Item
 
 if TYPE_CHECKING:
     from pymongo import AsyncMongoClient
     from pymongo.asynchronous.collection import AsyncCollection
 
 
-class AsyncMongoDBInventoryStorage(AsyncInventoryStorage):
-    """Async counterpart of ``MongoDBInventoryStorage``, using the same data layout.
+class AsyncMongoDBStorage(AsyncStorage):
+    """Async counterpart of ``MongoDBStorage``, using the same data layout.
 
     Takes an async client such as ``pymongo.AsyncMongoClient``.
     """

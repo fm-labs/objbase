@@ -1,7 +1,7 @@
 import json
 from typing import Any, Protocol
 
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import Item, Storage
 
 DEFAULT_KEY_PREFIX = "inventory:"
 
@@ -35,7 +35,7 @@ def redis_type_key(key_prefix: str, item_type: str) -> str:
     return f"{key_prefix}{item_type}"
 
 
-class RedisInventoryStorage(InventoryStorage):
+class RedisStorage(Storage):
     """Redis-backed storage.
 
     Each item type is one Redis hash (``{key_prefix}{item_type}``) mapping item

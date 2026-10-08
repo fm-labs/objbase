@@ -1,13 +1,13 @@
-"""Tests for InMemoryInventoryStorage."""
+"""Tests for InMemoryStorage."""
 
 import pytest
 
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
 
 
 @pytest.fixture()
-def storage() -> InMemoryInventoryStorage:
-    return InMemoryInventoryStorage()
+def storage() -> InMemoryStorage:
+    return InMemoryStorage()
 
 
 # ---------------------------------------------------------------------------
@@ -15,9 +15,9 @@ def storage() -> InMemoryInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestInMemoryInventoryStorageInit:
+class TestInMemoryStorageInit:
     def test_init_creates_empty_store(self):
-        storage = InMemoryInventoryStorage()
+        storage = InMemoryStorage()
         assert storage.data == {}
 
 
@@ -26,7 +26,7 @@ class TestInMemoryInventoryStorageInit:
 # ---------------------------------------------------------------------------
 
 
-class TestInMemoryInventoryStorageSelect:
+class TestInMemoryStorageSelect:
     def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert storage.items("todo") == []
 
@@ -56,7 +56,7 @@ class TestInMemoryInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestInMemoryInventoryStorageRead:
+class TestInMemoryStorageRead:
     def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         storage.write("todo", item)
@@ -80,7 +80,7 @@ class TestInMemoryInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestInMemoryInventoryStorageWrite:
+class TestInMemoryStorageWrite:
     def test_write_returns_true(self, storage):
         assert storage.write("todo", {"id": "1"}) is True
 
@@ -113,7 +113,7 @@ class TestInMemoryInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestInMemoryInventoryStorageDelete:
+class TestInMemoryStorageDelete:
     def test_delete_removes_item(self, storage):
         storage.write("todo", {"id": "1"})
         storage.write("todo", {"id": "2"})

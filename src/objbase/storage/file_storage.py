@@ -2,7 +2,7 @@ import json
 import os
 import sys
 
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import Item, Storage
 from objbase.util.file_util import atomic_write_json, atomic_write_text, locked
 
 # Newlines are rejected because the directory storage index stores one id per line.
@@ -61,7 +61,7 @@ def _contained_path(real_base: str, *parts: str) -> str:
     return path
 
 
-class FileBasedInventoryStorage(InventoryStorage):
+class FileBasedStorage(Storage):
     """Simple file-based storage that saves all items of a given inventory type in a single JSON file.
 
     Safe for concurrent use by multiple threads and processes on the same machine:
@@ -135,7 +135,7 @@ class FileBasedInventoryStorage(InventoryStorage):
         return items
 
 
-class DirectoryBasedInventoryStorage(InventoryStorage):
+class DirectoryBasedStorage(Storage):
     """Alternative file-based storage that uses a directory per inventory type and individual files per item.
 
     Each type directory also holds an index file (``.index``) listing the ids of

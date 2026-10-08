@@ -1,11 +1,11 @@
-"""Tests for MongoDBInventoryStorage using a real MongoDB via testcontainers."""
+"""Tests for MongoDBStorage using a real MongoDB via testcontainers."""
 
 import os
 
 import pytest
 from testcontainers.community.mongodb import MongoDbContainer
 
-from objbase.storage.mongodb_storage import MongoDBInventoryStorage
+from objbase.storage.mongodb_storage import MongoDBStorage
 
 # mongo:latest (8.x) refuses to start on Linux kernels >= 6.19 (SERVER-121912),
 # which recent Docker Desktop VMs ship. Pin a known-good image by default.
@@ -32,8 +32,8 @@ def mongo_client(mongo_container):
 
 
 @pytest.fixture()
-def storage(mongo_client) -> MongoDBInventoryStorage:
-    return MongoDBInventoryStorage(mongo_client)
+def storage(mongo_client) -> MongoDBStorage:
+    return MongoDBStorage(mongo_client)
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +41,7 @@ def storage(mongo_client) -> MongoDBInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestMongoDBInventoryStorageWrite:
+class TestMongoDBStorageWrite:
     def test_write_returns_true(self, storage):
         assert storage.write("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -81,14 +81,14 @@ class TestMongoDBInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestMongoDBInventoryStorageRead:
+class TestMongoDBStorageRead:
     def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         storage.write("todo", item)
         assert storage.read("todo", "42") == item
 
     def test_read_returns_none_for_unknown_id(self, storage):
-        """MongoDBInventoryStorage.read returns None (not {}) for missing items."""
+        """MongoDBStorage.read returns None (not {}) for missing items."""
         assert storage.read("todo", "nonexistent") is None
 
     def test_read_returns_none_for_unknown_type(self, storage):
@@ -114,7 +114,7 @@ class TestMongoDBInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestMongoDBInventoryStorageSelect:
+class TestMongoDBStorageSelect:
     def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert storage.items("todo") == []
 
@@ -167,7 +167,7 @@ class TestMongoDBInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestMongoDBInventoryStorageDelete:
+class TestMongoDBStorageDelete:
     def test_delete_returns_true_when_item_exists(self, storage):
         storage.write("todo", {"id": "1"})
         assert storage.delete("todo", "1") is True

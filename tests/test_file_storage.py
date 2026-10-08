@@ -1,4 +1,4 @@
-"""Tests for FileBasedInventoryStorage and DirectoryBasedInventoryStorage."""
+"""Tests for FileBasedStorage and DirectoryBasedStorage."""
 
 import json
 import os
@@ -11,8 +11,8 @@ import pytest
 
 from objbase.interface import Item
 from objbase.storage.file_storage import (
-    DirectoryBasedInventoryStorage,
-    FileBasedInventoryStorage,
+    DirectoryBasedStorage,
+    FileBasedStorage,
 )
 from objbase.util.file_util import locked
 
@@ -27,13 +27,13 @@ def base_dir(tmp_path) -> str:
 
 
 @pytest.fixture()
-def file_storage(base_dir) -> FileBasedInventoryStorage:
-    return FileBasedInventoryStorage(base_dir)
+def file_storage(base_dir) -> FileBasedStorage:
+    return FileBasedStorage(base_dir)
 
 
 @pytest.fixture()
-def dir_storage(base_dir) -> DirectoryBasedInventoryStorage:
-    return DirectoryBasedInventoryStorage(base_dir)
+def dir_storage(base_dir) -> DirectoryBasedStorage:
+    return DirectoryBasedStorage(base_dir)
 
 
 def seed_file(base_dir: str, item_type: str, items: list[Item]) -> None:
@@ -44,21 +44,21 @@ def seed_file(base_dir: str, item_type: str, items: list[Item]) -> None:
 
 
 # ===========================================================================
-# FileBasedInventoryStorage
+# FileBasedStorage
 # ===========================================================================
 
 
-class TestFileBasedInventoryStorageInit:
+class TestFileBasedStorageInit:
     def test_init_raises_on_missing_dir(self):
         with pytest.raises(ValueError, match="does not exist"):
-            FileBasedInventoryStorage("/nonexistent/path/xyz")
+            FileBasedStorage("/nonexistent/path/xyz")
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
-        storage = FileBasedInventoryStorage(base_dir)
+        storage = FileBasedStorage(base_dir)
         assert storage.inventory_dir == base_dir
 
 
-class TestFileBasedInventoryStorageSelect:
+class TestFileBasedStorageSelect:
     def test_select_returns_all_items(self, file_storage, base_dir):
         items = [{"id": "1", "name": "a"}, {"id": "2", "name": "b"}]
         seed_file(base_dir, "todo", items)
@@ -72,7 +72,7 @@ class TestFileBasedInventoryStorageSelect:
         assert file_storage.items("todo") == []
 
 
-class TestFileBasedInventoryStorageWrite:
+class TestFileBasedStorageWrite:
     def test_write_creates_new_item(self, file_storage, base_dir):
         seed_file(base_dir, "todo", [])
         item = {"id": "1", "title": "Buy milk"}
@@ -108,7 +108,7 @@ class TestFileBasedInventoryStorageWrite:
         assert len(file_storage.items("todo")) == 3
 
 
-class TestFileBasedInventoryStorageRead:
+class TestFileBasedStorageRead:
     def test_read_returns_item_by_id(self, file_storage, base_dir):
         item = {"id": "42", "title": "Hello"}
         seed_file(base_dir, "todo", [item])
@@ -127,7 +127,7 @@ class TestFileBasedInventoryStorageRead:
         assert file_storage.read("todo", "3") == {"id": "3", "val": 3}
 
 
-class TestFileBasedInventoryStorageDelete:
+class TestFileBasedStorageDelete:
     def test_delete_removes_item(self, file_storage, base_dir):
         seed_file(base_dir, "todo", [{"id": "1"}, {"id": "2"}])
         file_storage.delete("todo", "1")
@@ -151,21 +151,21 @@ class TestFileBasedInventoryStorageDelete:
 
 
 # ===========================================================================
-# DirectoryBasedInventoryStorage
+# DirectoryBasedStorage
 # ===========================================================================
 
 
-class TestDirectoryBasedInventoryStorageInit:
+class TestDirectoryBasedStorageInit:
     def test_init_raises_on_missing_dir(self):
         with pytest.raises(ValueError, match="does not exist"):
-            DirectoryBasedInventoryStorage("/nonexistent/path/xyz")
+            DirectoryBasedStorage("/nonexistent/path/xyz")
 
     def test_init_succeeds_with_existing_dir(self, base_dir):
-        storage = DirectoryBasedInventoryStorage(base_dir)
+        storage = DirectoryBasedStorage(base_dir)
         assert storage.inventory_dir == base_dir
 
 
-class TestDirectoryBasedInventoryStorageSelect:
+class TestDirectoryBasedStorageSelect:
     def test_select_returns_empty_list_when_type_dir_missing(self, dir_storage):
         assert dir_storage.items("ghost") == []
 
@@ -189,7 +189,7 @@ class TestDirectoryBasedInventoryStorageSelect:
         assert notes == [{"id": "1", "kind": "note"}]
 
 
-class TestDirectoryBasedInventoryStorageWrite:
+class TestDirectoryBasedStorageWrite:
     def test_write_returns_true(self, dir_storage):
         assert dir_storage.write("todo", {"id": "1"}) is True
 
@@ -220,7 +220,7 @@ class TestDirectoryBasedInventoryStorageWrite:
         assert len(dir_storage.items("todo")) == 1
 
 
-class TestDirectoryBasedInventoryStorageRead:
+class TestDirectoryBasedStorageRead:
     def test_read_returns_item_by_id(self, dir_storage):
         item = {"id": "7", "title": "Test"}
         dir_storage.write("todo", item)
@@ -234,7 +234,7 @@ class TestDirectoryBasedInventoryStorageRead:
         assert dir_storage.read("ghost_type", "1") is None
 
 
-class TestDirectoryBasedInventoryStorageDelete:
+class TestDirectoryBasedStorageDelete:
     def test_delete_removes_item_and_returns_true(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         result = dir_storage.delete("todo", "1")
@@ -283,7 +283,7 @@ class TestFileStoragePathValidation:
     def test_dir_storage_traversal_writes_nothing_outside_base_dir(self, tmp_path):
         base = tmp_path / "base"
         base.mkdir()
-        storage = DirectoryBasedInventoryStorage(str(base))
+        storage = DirectoryBasedStorage(str(base))
         with pytest.raises(ValueError):
             storage.write("todo", {"id": "../../escaped"})
         assert list(tmp_path.rglob("escaped*")) == []
@@ -385,8 +385,8 @@ class TestFileStorageSymlinkContainment:
         real.mkdir()
         symlink(str(real), str(tmp_path / "link"))
         for storage in (
-            DirectoryBasedInventoryStorage(str(tmp_path / "link")),
-            FileBasedInventoryStorage(str(tmp_path / "link")),
+                DirectoryBasedStorage(str(tmp_path / "link")),
+                FileBasedStorage(str(tmp_path / "link")),
         ):
             storage.write("todo", {"id": "1"})
             assert storage.read("todo", "1") == {"id": "1"}
@@ -421,14 +421,14 @@ class TestFileStorageWindowsNames:
 
 WRITER_PROCESS = """
 import sys
-from objbase.storage.file_storage import FileBasedInventoryStorage
-storage = FileBasedInventoryStorage(sys.argv[1])
+from objbase.storage.file_storage import FileBasedStorage
+storage = FileBasedStorage(sys.argv[1])
 for i in range(int(sys.argv[3])):
     storage.write("todo", {"id": f"{sys.argv[2]}-{i}"})
 """
 
 
-class TestFileBasedInventoryStorageConcurrency:
+class TestFileBasedStorageConcurrency:
     def test_concurrent_processes_do_not_lose_writes(self, file_storage, base_dir):
         workers, per_worker = 4, 25
         procs = [
@@ -478,7 +478,7 @@ class TestFileBasedInventoryStorageConcurrency:
             assert result == [[{"id": "1"}]]
 
 
-class TestFileBasedInventoryStorageFiles:
+class TestFileBasedStorageFiles:
     def test_failed_write_keeps_original_file(self, file_storage, base_dir):
         file_storage.write("todo", {"id": "1"})
         with pytest.raises(TypeError):
@@ -511,7 +511,7 @@ class TestFileBasedInventoryStorageFiles:
         assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
 
 
-class TestDirectoryBasedInventoryStorageFiles:
+class TestDirectoryBasedStorageFiles:
     def test_failed_write_leaves_no_partial_item(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         with pytest.raises(TypeError):
@@ -534,8 +534,8 @@ def read_index(base_dir: str, item_type: str) -> list[str]:
 
 DIR_WRITER_PROCESS = """
 import sys
-from objbase.storage.file_storage import DirectoryBasedInventoryStorage
-storage = DirectoryBasedInventoryStorage(sys.argv[1])
+from objbase.storage.file_storage import DirectoryBasedStorage
+storage = DirectoryBasedStorage(sys.argv[1])
 for i in range(int(sys.argv[3])):
     storage.write("todo", {"id": f"{sys.argv[2]}-{i}"})
     if i % 2:
@@ -543,7 +543,7 @@ for i in range(int(sys.argv[3])):
 """
 
 
-class TestDirectoryBasedInventoryStorageIndex:
+class TestDirectoryBasedStorageIndex:
     def test_write_appends_id_to_index(self, dir_storage, base_dir):
         dir_storage.write("todo", {"id": "1"})
         dir_storage.write("todo", {"id": "2"})

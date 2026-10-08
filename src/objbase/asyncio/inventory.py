@@ -1,19 +1,18 @@
-from objbase.asyncio.async_storage import AsyncInventoryStorage
 from objbase.errors import InventoryError, ItemNotFoundError
-from objbase.interface import Item
+from objbase.interface import AsyncStorage, Item
 from objbase.inventory import check_patch_data, require_item_id, require_read_back
 
 
 class AsyncInventory:
-    """Async counterpart of ``Inventory``, backed by an ``AsyncInventoryStorage``.
+    """Async counterpart of ``Inventory``, backed by an ``AsyncStorage``.
 
     Same methods and behaviour as ``Inventory``, but every method is a coroutine.
     """
 
-    def __init__(self, item_type: str, storage: AsyncInventoryStorage):
-        if not isinstance(storage, AsyncInventoryStorage):
+    def __init__(self, item_type: str, storage: AsyncStorage):
+        if not isinstance(storage, AsyncStorage):
             raise TypeError(
-                f"{type(storage).__name__} is not an AsyncInventoryStorage; use Inventory for sync storage adapters."
+                f"{type(storage).__name__} is not an AsyncStorage; use Inventory for sync storage adapters."
             )
         self.storage = storage
         self.item_type = item_type

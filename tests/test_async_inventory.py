@@ -3,16 +3,16 @@
 import pydantic
 import pytest
 
-from objbase.asyncio.async_inventory import AsyncInventory
+from objbase.asyncio.inventory import AsyncInventory
 from objbase.errors import InventoryError, ItemNotFoundError
 from objbase.pydantic import AsyncPydanticInventory
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
-from objbase.storage.sqlite_storage import SQLiteInventoryStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.sqlite_storage import SQLiteStorage
 
 
 @pytest.fixture()
-def storage() -> InMemoryInventoryStorage:
-    return InMemoryInventoryStorage()
+def storage() -> InMemoryStorage:
+    return InMemoryStorage()
 
 
 @pytest.fixture()
@@ -20,15 +20,15 @@ def todos(storage) -> AsyncInventory:
     return AsyncInventory(item_type="todo", storage=storage)
 
 
-class FailingStorage(InMemoryInventoryStorage):
+class FailingStorage(InMemoryStorage):
     async def awrite(self, item_type, item):
         return False
 
 
 class TestAsyncInventoryInit:
     def test_rejects_sync_only_storage(self, tmp_path):
-        with pytest.raises(TypeError, match="not an AsyncInventoryStorage"):
-            AsyncInventory("todo", SQLiteInventoryStorage(str(tmp_path / "x.db")))  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="not an AsyncStorage"):
+            AsyncInventory("todo", SQLiteStorage(str(tmp_path / "x.db")))  # type: ignore[arg-type]
 
 
 class TestAsyncInventorySave:
@@ -148,8 +148,8 @@ class TestAsyncPydanticInventory:
         assert model_todos.storage is storage
 
     def test_rejects_sync_only_storage(self, tmp_path):
-        with pytest.raises(TypeError, match="not an AsyncInventoryStorage"):
-            AsyncPydanticInventory("todo", SQLiteInventoryStorage(str(tmp_path / "x.db")), Todo)  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="not an AsyncStorage"):
+            AsyncPydanticInventory("todo", SQLiteStorage(str(tmp_path / "x.db")), Todo)  # type: ignore[arg-type]
 
     async def test_save_returns_model(self, model_todos):
         result = await model_todos.save(Todo(id="1", title="Buy milk"))

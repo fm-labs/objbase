@@ -3,14 +3,14 @@
 import asyncio
 import os
 
-from objbase.asyncio.async_file_storage import AsyncFileBasedInventoryStorage
-from objbase.asyncio.async_inventory import AsyncInventory
+from objbase.asyncio.inventory import AsyncInventory
+from objbase.asyncio.storage.file_storage import AsyncFileBasedStorage
 
 
 async def main() -> None:
     base_dir = os.getenv("INVENTORY_DIR", "data")
     os.makedirs(base_dir, exist_ok=True)  # the base directory must exist
-    storage = AsyncFileBasedInventoryStorage(base_dir=base_dir)
+    storage = AsyncFileBasedStorage(base_dir=base_dir)
     todos_inventory = AsyncInventory(item_type="todo", storage=storage)
 
     # Create some to-do items

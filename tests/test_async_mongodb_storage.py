@@ -1,4 +1,4 @@
-"""Tests for AsyncMongoDBInventoryStorage using a real MongoDB via testcontainers."""
+"""Tests for AsyncMongoDBStorage using a real MongoDB via testcontainers."""
 
 import os
 from typing import Any
@@ -7,7 +7,7 @@ import pymongo
 import pytest
 from testcontainers.community.mongodb import MongoDbContainer
 
-from objbase.asyncio.async_mongodb_storage import AsyncMongoDBInventoryStorage
+from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
 MONGO_IMAGE = os.getenv("INVENTORYDB_TEST_MONGO_IMAGE", "mongo:7.0")
@@ -34,8 +34,8 @@ async def mongo_client(mongo_container):
 
 
 @pytest.fixture()
-async def storage(mongo_client) -> AsyncMongoDBInventoryStorage:
-    return AsyncMongoDBInventoryStorage(mongo_client)
+async def storage(mongo_client) -> AsyncMongoDBStorage:
+    return AsyncMongoDBStorage(mongo_client)
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ async def storage(mongo_client) -> AsyncMongoDBInventoryStorage:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncMongoDBInventoryStorageWrite:
+class TestAsyncMongoDBStorageWrite:
     async def test_write_returns_true(self, storage):
         assert await storage.awrite("todo", {"id": "1", "title": "Buy milk"}) is True
 
@@ -73,7 +73,7 @@ class TestAsyncMongoDBInventoryStorageWrite:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncMongoDBInventoryStorageRead:
+class TestAsyncMongoDBStorageRead:
     async def test_read_returns_item_by_id(self, storage):
         item = {"id": "42", "title": "Hello"}
         await storage.awrite("todo", item)
@@ -99,7 +99,7 @@ class TestAsyncMongoDBInventoryStorageRead:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncMongoDBInventoryStorageSelect:
+class TestAsyncMongoDBStorageSelect:
     async def test_select_returns_empty_list_for_unknown_type(self, storage):
         assert await storage.aitems("todo") == []
 
@@ -139,7 +139,7 @@ class TestAsyncMongoDBInventoryStorageSelect:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncMongoDBInventoryStorageKeys:
+class TestAsyncMongoDBStorageKeys:
     async def test_keys_returns_ids(self, storage):
         await storage.awrite("todo", {"id": "1"})
         await storage.awrite("todo", {"id": "2"})
@@ -154,7 +154,7 @@ class TestAsyncMongoDBInventoryStorageKeys:
 # ---------------------------------------------------------------------------
 
 
-class TestAsyncMongoDBInventoryStorageDelete:
+class TestAsyncMongoDBStorageDelete:
     async def test_delete_returns_true_when_item_exists(self, storage):
         await storage.awrite("todo", {"id": "1"})
         assert await storage.adelete("todo", "1") is True
@@ -184,9 +184,9 @@ class TestAsyncMongoDBInventoryStorageDelete:
         assert await storage.aitems("notes") == [{"id": "1"}]
 
 
-class TestAsyncMongoDBInventoryStorageLayout:
+class TestAsyncMongoDBStorageLayout:
     async def test_shares_data_with_sync_storage(self, mongo_container, storage):
-        from objbase.storage.mongodb_storage import MongoDBInventoryStorage
+        from objbase.storage.mongodb_storage import MongoDBStorage
 
-        MongoDBInventoryStorage(mongo_container.get_connection_client()).write("todo", {"id": "1", "n": 1})
+        MongoDBStorage(mongo_container.get_connection_client()).write("todo", {"id": "1", "n": 1})
         assert await storage.aread("todo", "1") == {"id": "1", "n": 1}

@@ -1,10 +1,9 @@
 import asyncio
 
-from objbase.asyncio.async_storage import AsyncInventoryStorage
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import AsyncStorage, Item, Storage
 
 
-class ThreadedAsyncInventoryStorage[S: InventoryStorage](AsyncInventoryStorage):
+class ThreadedAsyncStorage[S: Storage](AsyncStorage):
     """Base for async adapters that run a blocking sync adapter in worker threads.
 
     Each call is passed to ``asyncio.to_thread``, so the event loop is never blocked by

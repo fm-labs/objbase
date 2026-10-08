@@ -38,7 +38,7 @@ def test_import_works_without_optional_dependencies():
         "for m in ('redis', 'redis.asyncio', 'pymongo', 'pydantic'):\n"
         "    sys.modules[m] = None\n"
         "import objbase\n"
-        "inv = objbase.Inventory('todo', objbase.InMemoryInventoryStorage())\n"
+        "inv = objbase.Inventory('todo', objbase.InMemoryStorage())\n"
         "inv.save({'id': '1'})\n"
         "assert inv.get('1') == {'id': '1'}\n"
         "for name in ('PydanticInventory', 'AsyncPydanticInventory'):\n"

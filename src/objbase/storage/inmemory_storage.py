@@ -1,10 +1,9 @@
 import copy
 
-from objbase.asyncio.async_storage import AsyncInventoryStorage
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import AsyncStorage, Item, Storage
 
 
-class InMemoryInventoryStorage(InventoryStorage, AsyncInventoryStorage):
+class InMemoryStorage(Storage, AsyncStorage):
     """In-memory storage implementation for inventory items.
 
     Items are deep-copied on the way in and out, so callers never share

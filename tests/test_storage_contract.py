@@ -1,7 +1,7 @@
 """Shared contract tests run against every storage adapter.
 
 Each adapter must behave identically for the operations below (see the
-``InventoryStorage`` docstring). Adapter-specific behaviour belongs in the
+``Storage`` docstring). Adapter-specific behaviour belongs in the
 per-adapter test modules.
 
 Redis and MongoDB run in testcontainers and are skipped when Docker is not
@@ -15,14 +15,14 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-from objbase.asyncio.async_storage import AsyncInventoryStorage
-from objbase.interface import InventoryStorage, Item
+from objbase import AsyncStorage
+from objbase.interface import Item, Storage
 from objbase.storage.file_storage import (
-    DirectoryBasedInventoryStorage,
-    FileBasedInventoryStorage,
+    DirectoryBasedStorage,
+    FileBasedStorage,
 )
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
-from objbase.storage.sqlite_storage import SQLiteInventoryStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
+from objbase.storage.sqlite_storage import SQLiteStorage
 
 # See tests/test_mongodb_storage.py for why mongo:latest is not used.
 MONGO_IMAGE = os.getenv("INVENTORYDB_TEST_MONGO_IMAGE", "mongo:7.0")
@@ -64,35 +64,35 @@ def mongo_container():
 
 
 def _inmemory(request, tmp_path):
-    return InMemoryInventoryStorage()
+    return InMemoryStorage()
 
 
 def _file(request, tmp_path):
-    return FileBasedInventoryStorage(str(tmp_path))
+    return FileBasedStorage(str(tmp_path))
 
 
 def _directory(request, tmp_path):
-    return DirectoryBasedInventoryStorage(str(tmp_path))
+    return DirectoryBasedStorage(str(tmp_path))
 
 
 def _sqlite(request, tmp_path):
-    return SQLiteInventoryStorage(str(tmp_path / "inventory.db"))
+    return SQLiteStorage(str(tmp_path / "inventory.db"))
 
 
 def _redis(request, tmp_path):
-    from objbase.storage.redis_storage import RedisInventoryStorage
+    from objbase.storage.redis_storage import RedisStorage
 
     client = request.getfixturevalue("redis_container").get_client()
     client.flushdb()
-    return RedisInventoryStorage(client)
+    return RedisStorage(client)
 
 
 def _mongodb(request, tmp_path):
-    from objbase.storage.mongodb_storage import MongoDBInventoryStorage
+    from objbase.storage.mongodb_storage import MongoDBStorage
 
     client = request.getfixturevalue("mongo_container").get_connection_client()
     client.drop_database("inventory")
-    return MongoDBInventoryStorage(client)
+    return MongoDBStorage(client)
 
 
 SYNC_ADAPTERS = [
@@ -106,14 +106,14 @@ SYNC_ADAPTERS = [
 
 
 @pytest.fixture(params=SYNC_ADAPTERS)
-def storage(request, tmp_path) -> InventoryStorage:
-    adapter: InventoryStorage = request.param(request, tmp_path)
+def storage(request, tmp_path) -> Storage:
+    adapter: Storage = request.param(request, tmp_path)
     return adapter
 
 
 class TestStorageContract:
     def test_implements_protocol(self, storage):
-        assert isinstance(storage, InventoryStorage)
+        assert isinstance(storage, Storage)
 
     # keys
 
@@ -250,31 +250,31 @@ class TestStorageContract:
 
 
 async def _async_inmemory(request):
-    return InMemoryInventoryStorage()
+    return InMemoryStorage()
 
 
 async def _async_file(request):
-    from objbase.asyncio.async_file_storage import AsyncFileBasedInventoryStorage
+    from objbase.asyncio.storage.file_storage import AsyncFileBasedStorage
 
-    return AsyncFileBasedInventoryStorage(str(request.getfixturevalue("tmp_path")))
+    return AsyncFileBasedStorage(str(request.getfixturevalue("tmp_path")))
 
 
 async def _async_directory(request):
-    from objbase.asyncio.async_file_storage import AsyncDirectoryBasedInventoryStorage
+    from objbase.asyncio.storage.file_storage import AsyncDirectoryBasedStorage
 
-    return AsyncDirectoryBasedInventoryStorage(str(request.getfixturevalue("tmp_path")))
+    return AsyncDirectoryBasedStorage(str(request.getfixturevalue("tmp_path")))
 
 
 async def _async_sqlite(request):
-    from objbase.asyncio.async_sqlite_storage import AsyncSQLiteInventoryStorage
+    from objbase.asyncio.storage.sqlite_storage import AsyncSQLiteStorage
 
-    return AsyncSQLiteInventoryStorage(str(request.getfixturevalue("tmp_path") / "contract.db"))
+    return AsyncSQLiteStorage(str(request.getfixturevalue("tmp_path") / "contract.db"))
 
 
 async def _async_redis(request):
     import redis.asyncio
 
-    from objbase.asyncio.async_redis_storage import AsyncRedisInventoryStorage
+    from objbase.asyncio.storage.redis_storage import AsyncRedisStorage
 
     container = request.getfixturevalue("redis_container")
     client = redis.asyncio.Redis(
@@ -283,18 +283,18 @@ async def _async_redis(request):
         decode_responses=True,
     )
     await client.flushdb()
-    return AsyncRedisInventoryStorage(client)
+    return AsyncRedisStorage(client)
 
 
 async def _async_mongodb(request):
     import pymongo
 
-    from objbase.asyncio.async_mongodb_storage import AsyncMongoDBInventoryStorage
+    from objbase.asyncio.storage.mongodb_storage import AsyncMongoDBStorage
 
     url = request.getfixturevalue("mongo_container").get_connection_url()
     client: pymongo.AsyncMongoClient[Item] = pymongo.AsyncMongoClient(url)
     await client.drop_database("inventory")
-    return AsyncMongoDBInventoryStorage(client)
+    return AsyncMongoDBStorage(client)
 
 
 ASYNC_ADAPTERS = [
@@ -308,7 +308,7 @@ ASYNC_ADAPTERS = [
 
 
 @pytest.fixture(params=ASYNC_ADAPTERS)
-async def async_storage(request) -> AsyncIterator[AsyncInventoryStorage]:
+async def async_storage(request) -> AsyncIterator[AsyncStorage]:
     storage = await request.param(request)
     yield storage
     client = getattr(storage, "redis_client", None)
@@ -321,7 +321,7 @@ async def async_storage(request) -> AsyncIterator[AsyncInventoryStorage]:
 
 class TestAsyncStorageContract:
     def test_implements_protocol(self, async_storage):
-        assert isinstance(async_storage, AsyncInventoryStorage)
+        assert isinstance(async_storage, AsyncStorage)
 
     async def test_keys_unknown_type_returns_empty_list(self, async_storage):
         assert await async_storage.akeys("ghost") == []

@@ -1,7 +1,7 @@
 from typing import Any
 
 from objbase.errors import InventoryError, ItemNotFoundError
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import Item, Storage
 
 
 def require_item_id(item: Item) -> Any:
@@ -26,7 +26,7 @@ def require_read_back(item: Item | None, item_type: str, id: str) -> Item:
 
 
 class Inventory:
-    def __init__(self, item_type: str, storage: InventoryStorage):
+    def __init__(self, item_type: str, storage: Storage):
         self.storage = storage
         self.item_type = item_type
 

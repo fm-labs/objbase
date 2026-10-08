@@ -3,7 +3,7 @@ import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from objbase.interface import InventoryStorage, Item
+from objbase.interface import Item, Storage
 
 CREATE_TABLE_SQL = """
     CREATE TABLE IF NOT EXISTS items (
@@ -15,7 +15,7 @@ CREATE_TABLE_SQL = """
 """
 
 
-class SQLiteInventoryStorage(InventoryStorage):
+class SQLiteStorage(Storage):
     """SQLite-backed storage. Each item is stored as a JSON blob in a single table."""
 
     def __init__(self, db_path: str):

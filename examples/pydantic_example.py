@@ -1,7 +1,7 @@
 import pydantic
 
 from objbase.pydantic import PydanticInventory
-from objbase.storage.inmemory_storage import InMemoryInventoryStorage
+from objbase.storage.inmemory_storage import InMemoryStorage
 
 
 class Todo(pydantic.BaseModel):
@@ -10,7 +10,7 @@ class Todo(pydantic.BaseModel):
     completed: bool = False
 
 
-model_storage = InMemoryInventoryStorage()
+model_storage = InMemoryStorage()
 todos_inventory = PydanticInventory(item_type="todos", model_class=Todo, storage=model_storage)
 
 # Create a new to-do item
